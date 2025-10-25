@@ -8,7 +8,7 @@ namespace Mediators;
 
 class Program
 {
-    static void Main(string[] args)
+    static async Task Main()
     {
         // Setup dependency injection
         var serviceProvider = new ServiceCollection()
@@ -40,42 +40,60 @@ class Program
         logger.LogInformation("=== Chat Room Application Started ===\n");
 
         // Create users
-        var alice = new User("1", "Alice", "alice@example.com", DateTime.MinValue, UserStatus.Offline);
+        var alice = new User(
+            "1",
+            "Alice",
+            "alice@example.com",
+            DateTime.MinValue,
+            UserStatus.Offline
+        );
         var bob = new User("2", "Bob", "bob@example.com", DateTime.MinValue, UserStatus.Offline);
-        var charlie = new User("3", "Charlie", "charlie@example.com", DateTime.MinValue, UserStatus.Offline);
+        var charlie = new User(
+            "3",
+            "Charlie",
+            "charlie@example.com",
+            DateTime.MinValue,
+            UserStatus.Offline
+        );
 
         // Add users to chat room
-        chatRoom.AddUser(alice);
-        chatRoom.AddUser(bob);
-        chatRoom.AddUser(charlie);
+        await chatRoom.AddUserAsync(alice).ConfigureAwait(false);
+        await chatRoom.AddUserAsync(bob).ConfigureAwait(false);
+        await chatRoom.AddUserAsync(charlie).ConfigureAwait(false);
 
         Console.WriteLine("\n--- Users Joined ---\n");
 
         // Change user statuses
-        chatRoom.ChangeUserStatus("1", UserStatus.Online);
-        chatRoom.ChangeUserStatus("2", UserStatus.Online);
-        chatRoom.ChangeUserStatus("3", UserStatus.Away);
+        await chatRoom.ChangeUserStatusAsync("1", UserStatus.Online).ConfigureAwait(false);
+        await chatRoom.ChangeUserStatusAsync("2", UserStatus.Online).ConfigureAwait(false);
+        await chatRoom.ChangeUserStatusAsync("3", UserStatus.Away).ConfigureAwait(false);
 
         Console.WriteLine("\n--- User Statuses Changed ---\n");
 
         // Send public messages
-        chatRoom.SendMessage("1", "Hello everyone!", MessageType.Public);
-        chatRoom.SendMessage("2", "Hi Alice!", MessageType.Public);
+        await chatRoom
+            .SendMessageAsync("1", "Hello everyone!", MessageType.Public)
+            .ConfigureAwait(false);
+        await chatRoom.SendMessageAsync("2", "Hi Alice!", MessageType.Public).ConfigureAwait(false);
 
         Console.WriteLine("\n--- Public Messages Sent ---\n");
 
         // Send private message
-        chatRoom.SendMessage("1", "Hey Bob, how are you?", MessageType.Private, "2");
+        await chatRoom
+            .SendMessageAsync("1", "Hey Bob, how are you?", MessageType.Private, "2")
+            .ConfigureAwait(false);
 
         Console.WriteLine("\n--- Private Message Sent ---\n");
 
         // Change status to offline
-        chatRoom.ChangeUserStatus("3", UserStatus.Offline);
+        await chatRoom.ChangeUserStatusAsync("3", UserStatus.Offline).ConfigureAwait(false);
 
         Console.WriteLine("\n--- Charlie went offline ---\n");
 
         // Send message to offline user
-        chatRoom.SendMessage("1", "Charlie, see you later!", MessageType.Private, "3");
+        await chatRoom
+            .SendMessageAsync("1", "Charlie, see you later!", MessageType.Private, "3")
+            .ConfigureAwait(false);
 
         Console.WriteLine("\n--- Message sent to offline user ---\n");
 

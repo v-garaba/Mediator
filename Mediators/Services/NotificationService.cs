@@ -17,37 +17,37 @@ public class NotificationService
         _logger = logger;
         _messageBus = messageBus;
 
-        _messageBus.Subscribe<NotifyUserOfMessageRequest>(NotifyUserOfMessage);
-        _messageBus.Subscribe<NotifyUserStatusChangeRequest>(NotifyUserStatusChange);
+        _messageBus.Subscribe<NotifyUserOfMessageRequest>(NotifyUserOfMessageAsync);
+        _messageBus.Subscribe<NotifyUserStatusChangeRequest>(NotifyUserStatusChangeAsync);
     }
 
-    private void NotifyUserOfMessage(NotifyUserOfMessageRequest request)
+    private async Task NotifyUserOfMessageAsync(NotifyUserOfMessageRequest request)
     {
         _logger.LogInformation($"Notifying user {request.User.Name} of new message");
 
         // BAD: Tight coupling - directly calling multiple services
         if (request.User.Status == UserStatus.Offline)
         {
-            _messageBus.Publish(
+            await _messageBus.Publish(
                 new EmailRequest(request.User.Email, "New Message", request.Message.Content)
             );
-            _messageBus.Publish(
+            await _messageBus.Publish(
                 new SendSmsRequest(request.User.Id, $"New message from {request.Message.SenderId}")
             );
         }
         else
         {
-            _messageBus.Publish(
+            await _messageBus.Publish(
                 new SendPushNotificationRequest(request.User.Id, request.Message.Content)
             );
         }
 
-        _messageBus.Publish(
+        await _messageBus.Publish(
             new TrackMessageNotificationRequest(request.User.Id, request.Message.Id)
         );
     }
 
-    private void NotifyUserStatusChange(NotifyUserStatusChangeRequest request)
+    private async Task NotifyUserStatusChangeAsync(NotifyUserStatusChangeRequest request)
     {
         _logger.LogInformation(
             $"User {request.User.Name} status changed from {request.OldStatus} to {request.NewStatus}"
@@ -55,10 +55,10 @@ public class NotificationService
 
         if (request.NewStatus == UserStatus.Online)
         {
-            _messageBus.Publish(
+            await _messageBus.Publish(
                 new SendPushNotificationRequest(request.User.Id, "You are now online")
             );
-            _messageBus.Publish(
+            await _messageBus.Publish(
                 new TrackUserStatusChangeRequest(request.User.Id, request.NewStatus.ToString())
             );
         }

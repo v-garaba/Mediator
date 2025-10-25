@@ -14,11 +14,12 @@ public class EmailService
         _messageBus = messageBus;
 
         // Subscribing to email messages
-        _messageBus.Subscribe<EmailRequest>(SendEmail);
+        _messageBus.Subscribe<EmailRequest>(SendEmailAsync);
     }
 
-    private void SendEmail(EmailRequest email)
+    private async Task SendEmailAsync(EmailRequest email)
     {
+        await Task.Yield();
         // Simulate sending email
         _logger.LogInformation(
             $"[EMAIL] To: {email.To}, Subject: {email.Subject}, Body: {email.Body}"

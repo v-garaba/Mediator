@@ -13,11 +13,12 @@ public class SmsService
         _logger = logger;
         _messageBus = messageBus;
 
-        _messageBus.Subscribe<SendSmsRequest>(SendSms);
+        _messageBus.Subscribe<SendSmsRequest>(SendSmsAsync);
     }
 
-    private void SendSms(SendSmsRequest message)
+    private async Task SendSmsAsync(SendSmsRequest message)
     {
+        await Task.Yield();
         // Simulate sending SMS
         _logger.LogInformation($"[SMS] To User: {message.UserId}, Message: {message.Message}");
     }

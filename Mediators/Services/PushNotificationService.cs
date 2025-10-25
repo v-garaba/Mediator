@@ -13,11 +13,12 @@ public class PushNotificationService
         _logger = logger;
         _messageBus = messageBus;
 
-        _messageBus.Subscribe<SendPushNotificationRequest>(SendPushNotification);
+        _messageBus.Subscribe<SendPushNotificationRequest>(SendPushNotificationAsync);
     }
 
-    private void SendPushNotification(SendPushNotificationRequest message)
+    private async Task SendPushNotificationAsync(SendPushNotificationRequest message)
     {
+        await Task.Yield();
         // Simulate sending push notification
         _logger.LogInformation($"[PUSH] To User: {message.UserId}, Message: {message.Message}");
     }

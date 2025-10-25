@@ -15,11 +15,12 @@ public class MessageStorageService
         _logger = logger;
         _messageBus = messageBus;
 
-        _messageBus.Subscribe<StoreMessageRequest>(StoreMessage);
+        _messageBus.Subscribe<StoreMessageRequest>(StoreMessageAsync);
     }
 
-    private void StoreMessage(StoreMessageRequest message)
+    private async Task StoreMessageAsync(StoreMessageRequest message)
     {
+        await Task.Yield();
         _storage.Add(message.Message);
         _logger.LogInformation($"[STORAGE] Message {message.Message.Id} stored");
     }

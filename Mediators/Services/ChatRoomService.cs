@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Mediators.Messaging;
 using Mediators.Models;
 using Microsoft.Extensions.Logging;
@@ -19,7 +20,7 @@ public class ChatRoomService
     }
 
     // BAD: This method orchestrates too many things
-    public void SendMessage(
+    public async Task SendMessageAsync(
         string senderId,
         string content,
         MessageType type,
@@ -30,14 +31,14 @@ public class ChatRoomService
         _messages.Add(message);
 
         _logger.LogInformation($"Message sent by {senderId}: {content}");
-        _messageBus.Publish(new StoreMessageRequest(message));
-        _messageBus.Publish(new TrackMessageSentRequest(senderId, type.ToString()));
+        await _messageBus.Publish(new StoreMessageRequest(message));
+        await _messageBus.Publish(new TrackMessageSentRequest(senderId, type.ToString()));
 
         if (type == MessageType.Private && targetUserId != null)
         {
             if (_users.TryGetValue(targetUserId, out var targetUser))
             {
-                _messageBus.Publish(new NotifyUserOfMessageRequest(targetUser, message));
+                await _messageBus.Publish(new NotifyUserOfMessageRequest(targetUser, message));
             }
         }
         else if (type == MessageType.Public)
@@ -46,19 +47,19 @@ public class ChatRoomService
             {
                 if (user.Id != senderId)
                 {
-                    _messageBus.Publish(new NotifyUserOfMessageRequest(user, message));
+                    await _messageBus.Publish(new NotifyUserOfMessageRequest(user, message));
                 }
             }
         }
 
-        _messageBus.Publish(new UpdateUserActivityRequest(senderId));
+        await _messageBus.Publish(new UpdateUserActivityRequest(senderId));
     }
 
-    public void AddUser(User user)
+    public async Task AddUserAsync(User user)
     {
         _users[user.Id] = user;
         _logger.LogInformation($"User {user.Name} joined the chat room");
-        _messageBus.Publish(new RegisterUserRequest(user));
+        await _messageBus.Publish(new RegisterUserRequest(user));
 
         var systemMessage = new ChatMessage(
             "SYSTEM",
@@ -66,10 +67,10 @@ public class ChatRoomService
             MessageType.System
         );
         _messages.Add(systemMessage);
-        _messageBus.Publish(new StoreMessageRequest(systemMessage));
+        await _messageBus.Publish(new StoreMessageRequest(systemMessage));
     }
 
-    public void ChangeUserStatus(string userId, UserStatus newStatus)
+    public async Task ChangeUserStatusAsync(string userId, UserStatus newStatus)
     {
         if (_users.TryGetValue(userId, out var user))
         {
@@ -77,8 +78,10 @@ public class ChatRoomService
             user = user with { Status = newStatus };
 
             _logger.LogInformation($"User {user.Name} status changed to {newStatus}");
-            _messageBus.Publish(new NotifyUserStatusChangeRequest(user, oldStatus, newStatus));
-            _messageBus.Publish(new UpdateUserStatusRequest(userId, newStatus));
+            await _messageBus.Publish(
+                new NotifyUserStatusChangeRequest(user, oldStatus, newStatus)
+            );
+            await _messageBus.Publish(new UpdateUserStatusRequest(userId, newStatus));
         }
     }
 }

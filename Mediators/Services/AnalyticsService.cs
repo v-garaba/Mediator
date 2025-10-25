@@ -20,8 +20,9 @@ public class AnalyticsService
         _messageBus.Subscribe<TrackMessageSentRequest>(TrackMessageSent);
     }
 
-    private void TrackMessageNotification(TrackMessageNotificationRequest message)
+    private async Task TrackMessageNotification(TrackMessageNotificationRequest message)
     {
+        await Task.Yield();
         if (!_messageCount.TryGetValue(message.UserId, out int value))
         {
             value = 0;
@@ -34,8 +35,9 @@ public class AnalyticsService
         );
     }
 
-    private void TrackUserStatusChange(TrackUserStatusChangeRequest message)
+    private async Task TrackUserStatusChange(TrackUserStatusChangeRequest message)
     {
+        await Task.Yield();
         if (!_statusHistory.TryGetValue(message.UserId, out List<string>? value))
         {
             value = [];
@@ -49,8 +51,9 @@ public class AnalyticsService
         );
     }
 
-    private void TrackMessageSent(TrackMessageSentRequest message)
+    private async Task TrackMessageSent(TrackMessageSentRequest message)
     {
+        await Task.Yield();
         _logger.LogInformation(
             $"[ANALYTICS] Message sent tracked for user {message.UserId}, type: {message.MessageType}"
         );

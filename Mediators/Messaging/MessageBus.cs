@@ -4,9 +4,9 @@ namespace Mediators.Messaging;
 
 public sealed class MessageBus
 {
-    private readonly Dictionary<Type, List<Action<IRequest>>> _subscribers = [];
+    private readonly Dictionary<Type, List<Func<IRequest, Task>>> _subscribers = [];
 
-    public void Publish(IRequest message)
+    public async Task Publish(IRequest message)
     {
         ArgumentNullException.ThrowIfNull(message);
 
@@ -14,12 +14,12 @@ public sealed class MessageBus
         {
             foreach (var action in actions)
             {
-                action(message);
+                await action(message).ConfigureAwait(false);
             }
         }
     }
 
-    public void Subscribe<TRequest>(Action<TRequest> handler)
+    public void Subscribe<TRequest>(Func<TRequest, Task> handler)
         where TRequest : IRequest
     {
         if (!_subscribers.TryGetValue(typeof(TRequest), out var actions))
@@ -28,6 +28,6 @@ public sealed class MessageBus
             _subscribers[typeof(TRequest)] = actions;
         }
 
-        actions.Add(msg => handler((TRequest)msg));
+        actions.Add(async msg => await handler((TRequest)msg).ConfigureAwait(false));
     }
 }

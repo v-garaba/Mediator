@@ -15,28 +15,32 @@ public class UserManagementService
         _logger = logger;
         _messageBus = messageBus;
 
-        _messageBus.Subscribe<RegisterUserRequest>(RegisterUser);
-        _messageBus.Subscribe<UpdateUserActivityRequest>(UpdateUserActivity);
-        _messageBus.Subscribe<UpdateUserStatusRequest>(UpdateUserStatus);
+        _messageBus.Subscribe<RegisterUserRequest>(RegisterUserAsync);
+        _messageBus.Subscribe<UpdateUserActivityRequest>(UpdateUserActivityAsync);
+        _messageBus.Subscribe<UpdateUserStatusRequest>(UpdateUserStatusAsync);
     }
 
-    private void RegisterUser(RegisterUserRequest request)
+    private async Task RegisterUserAsync(RegisterUserRequest request)
     {
+        await Task.Yield();
         _registeredUsers[request.User.Id] = request.User;
         _logger.LogInformation($"[USER MGMT] User {request.User.Name} registered");
     }
 
-    private void UpdateUserActivity(UpdateUserActivityRequest request)
+    private async Task UpdateUserActivityAsync(UpdateUserActivityRequest request)
     {
+        await Task.Yield();
         if (_registeredUsers.TryGetValue(request.UserId, out var user))
         {
             user = user with { LastActiveTime = DateTime.UtcNow };
+            _registeredUsers[request.UserId] = user;
             _logger.LogInformation($"[USER MGMT] User {request.UserId} activity updated");
         }
     }
 
-    private void UpdateUserStatus(UpdateUserStatusRequest request)
+    private async Task UpdateUserStatusAsync(UpdateUserStatusRequest request)
     {
+        await Task.Yield();
         if (_registeredUsers.TryGetValue(request.UserId, out var user))
         {
             user = user with { Status = request.Status };
