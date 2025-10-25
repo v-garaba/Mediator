@@ -1,46 +1,58 @@
+using Mediators.Messaging;
 using Microsoft.Extensions.Logging;
 
 namespace Mediators.Services;
 
 public class AnalyticsService
 {
+    private readonly MessageBus _messageBus;
     private readonly ILogger<AnalyticsService> _logger;
-    private readonly Dictionary<string, int> _messageCount = new();
-    private readonly Dictionary<string, List<string>> _statusHistory = new();
+    private readonly Dictionary<string, int> _messageCount = [];
+    private readonly Dictionary<string, List<string>> _statusHistory = [];
 
-    public AnalyticsService(ILogger<AnalyticsService> logger)
+    public AnalyticsService(MessageBus messageBus, ILogger<AnalyticsService> logger)
     {
+        _messageBus = messageBus;
         _logger = logger;
+
+        _messageBus.Subscribe<TrackMessageNotificationRequest>(TrackMessageNotification);
+        _messageBus.Subscribe<TrackUserStatusChangeRequest>(TrackUserStatusChange);
+        _messageBus.Subscribe<TrackMessageSentRequest>(TrackMessageSent);
     }
 
-    public void TrackMessageNotification(string userId, string messageId)
+    private void TrackMessageNotification(TrackMessageNotificationRequest message)
     {
-        if (!_messageCount.ContainsKey(userId))
+        if (!_messageCount.TryGetValue(message.UserId, out int value))
         {
-            _messageCount[userId] = 0;
+            value = 0;
+            _messageCount[message.UserId] = value;
         }
-        _messageCount[userId]++;
+        _messageCount[message.UserId] = ++value;
 
         _logger.LogInformation(
-            $"[ANALYTICS] Message notification tracked for user {userId}. Total: {_messageCount[userId]}"
+            $"[ANALYTICS] Message notification tracked for user {message.UserId}. Total: {value}"
         );
     }
 
-    public void TrackUserStatusChange(string userId, string status)
+    private void TrackUserStatusChange(TrackUserStatusChangeRequest message)
     {
-        if (!_statusHistory.ContainsKey(userId))
+        if (!_statusHistory.TryGetValue(message.UserId, out List<string>? value))
         {
-            _statusHistory[userId] = new List<string>();
+            value = [];
+            _statusHistory[message.UserId] = value;
         }
-        _statusHistory[userId].Add($"{status} at {DateTime.UtcNow}");
 
-        _logger.LogInformation($"[ANALYTICS] Status change tracked for user {userId}: {status}");
+        value.Add($"{message.Status} at {DateTime.UtcNow}");
+
+        _logger.LogInformation(
+            $"[ANALYTICS] Status change tracked for user {message.UserId}: {message.Status}"
+        );
     }
 
-    public void TrackMessageSent(string userId, string messageType)
+    private void TrackMessageSent(TrackMessageSentRequest message)
     {
         _logger.LogInformation(
-            $"[ANALYTICS] Message sent tracked for user {userId}, type: {messageType}"
+            $"[ANALYTICS] Message sent tracked for user {message.UserId}, type: {message.MessageType}"
         );
     }
 

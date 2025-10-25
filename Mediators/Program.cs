@@ -1,4 +1,5 @@
-﻿using Mediators.Models;
+﻿using Mediators.Messaging;
+using Mediators.Models;
 using Mediators.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -19,10 +20,21 @@ class Program
             .AddSingleton<MessageStorageService>()
             .AddSingleton<UserManagementService>()
             .AddSingleton<NotificationService>()
+            .AddSingleton<MessageBus>()
             .AddSingleton<ChatRoomService>()
             .BuildServiceProvider();
 
         var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+
+        // Run services
+        serviceProvider.GetRequiredService<EmailService>();
+        serviceProvider.GetRequiredService<SmsService>();
+        serviceProvider.GetRequiredService<PushNotificationService>();
+        serviceProvider.GetRequiredService<AnalyticsService>();
+        serviceProvider.GetRequiredService<MessageStorageService>();
+        serviceProvider.GetRequiredService<UserManagementService>();
+        serviceProvider.GetRequiredService<NotificationService>();
+
         var chatRoom = serviceProvider.GetRequiredService<ChatRoomService>();
 
         logger.LogInformation("=== Chat Room Application Started ===\n");

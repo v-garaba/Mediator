@@ -1,3 +1,4 @@
+using Mediators.Messaging;
 using Mediators.Models;
 using Microsoft.Extensions.Logging;
 
@@ -9,57 +10,57 @@ namespace Mediators.Services;
 public class NotificationService
 {
     private readonly ILogger<NotificationService> _logger;
-    private readonly EmailService _emailService;
-    private readonly SmsService _smsService;
-    private readonly PushNotificationService _pushService;
-    private readonly AnalyticsService _analyticsService;
+    private readonly MessageBus _messageBus;
 
-    // BAD: Too many dependencies - violation of Single Responsibility Principle
-    public NotificationService(
-        ILogger<NotificationService> logger,
-        EmailService emailService,
-        SmsService smsService,
-        PushNotificationService pushService,
-        AnalyticsService analyticsService
-    )
+    public NotificationService(MessageBus messageBus, ILogger<NotificationService> logger)
     {
         _logger = logger;
-        _emailService = emailService;
-        _smsService = smsService;
-        _pushService = pushService;
-        _analyticsService = analyticsService;
+        _messageBus = messageBus;
+
+        _messageBus.Subscribe<NotifyUserOfMessageRequest>(NotifyUserOfMessage);
+        _messageBus.Subscribe<NotifyUserStatusChangeRequest>(NotifyUserStatusChange);
     }
 
-    // BAD: This method knows too much about other services
-    public void NotifyUserOfMessage(User user, ChatMessage message)
+    private void NotifyUserOfMessage(NotifyUserOfMessageRequest request)
     {
-        _logger.LogInformation($"Notifying user {user.Name} of new message");
+        _logger.LogInformation($"Notifying user {request.User.Name} of new message");
 
         // BAD: Tight coupling - directly calling multiple services
-        if (user.Status == UserStatus.Offline)
+        if (request.User.Status == UserStatus.Offline)
         {
-            _emailService.SendEmail(user.Email, "New Message", message.Content);
-            _smsService.SendSms(user.Id, $"New message from {message.SenderId}");
+            _messageBus.Publish(
+                new EmailRequest(request.User.Email, "New Message", request.Message.Content)
+            );
+            _messageBus.Publish(
+                new SendSmsRequest(request.User.Id, $"New message from {request.Message.SenderId}")
+            );
         }
         else
         {
-            _pushService.SendPushNotification(user.Id, message.Content);
+            _messageBus.Publish(
+                new SendPushNotificationRequest(request.User.Id, request.Message.Content)
+            );
         }
 
-        // BAD: Analytics logic mixed with notification logic
-        _analyticsService.TrackMessageNotification(user.Id, message.Id);
+        _messageBus.Publish(
+            new TrackMessageNotificationRequest(request.User.Id, request.Message.Id)
+        );
     }
 
-    // BAD: Another method with multiple responsibilities
-    public void NotifyUserStatusChange(User user, UserStatus oldStatus, UserStatus newStatus)
+    private void NotifyUserStatusChange(NotifyUserStatusChangeRequest request)
     {
-        _logger.LogInformation($"User {user.Name} status changed from {oldStatus} to {newStatus}");
+        _logger.LogInformation(
+            $"User {request.User.Name} status changed from {request.OldStatus} to {request.NewStatus}"
+        );
 
-        // BAD: Hard-coded business logic that should be configurable
-        if (newStatus == UserStatus.Online)
+        if (request.NewStatus == UserStatus.Online)
         {
-            _pushService.SendPushNotification(user.Id, "You are now online");
-            _analyticsService.TrackUserStatusChange(user.Id, newStatus.ToString());
+            _messageBus.Publish(
+                new SendPushNotificationRequest(request.User.Id, "You are now online")
+            );
+            _messageBus.Publish(
+                new TrackUserStatusChangeRequest(request.User.Id, request.NewStatus.ToString())
+            );
         }
     }
 }

@@ -1,3 +1,4 @@
+using Mediators.Messaging;
 using Mediators.Models;
 using Microsoft.Extensions.Logging;
 
@@ -6,17 +7,21 @@ namespace Mediators.Services;
 public class MessageStorageService
 {
     private readonly ILogger<MessageStorageService> _logger;
-    private readonly List<ChatMessage> _storage = new();
+    private readonly MessageBus _messageBus;
+    private readonly List<ChatMessage> _storage = [];
 
-    public MessageStorageService(ILogger<MessageStorageService> logger)
+    public MessageStorageService(MessageBus messageBus, ILogger<MessageStorageService> logger)
     {
         _logger = logger;
+        _messageBus = messageBus;
+
+        _messageBus.Subscribe<StoreMessageRequest>(StoreMessage);
     }
 
-    public void StoreMessage(ChatMessage message)
+    private void StoreMessage(StoreMessageRequest message)
     {
-        _storage.Add(message);
-        _logger.LogInformation($"[STORAGE] Message {message.Id} stored");
+        _storage.Add(message.Message);
+        _logger.LogInformation($"[STORAGE] Message {message.Message.Id} stored");
     }
 
     public IReadOnlyList<ChatMessage> GetAllMessages() => _storage.AsReadOnly();
