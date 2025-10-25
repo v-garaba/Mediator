@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Mediators.Messaging;
+using Mediators.Messaging.Notifications;
 using Mediators.Models;
 using Microsoft.Extensions.Logging;
 
@@ -8,14 +9,14 @@ namespace Mediators.Services;
 public class ChatRoomService
 {
     private readonly ILogger<ChatRoomService> _logger;
-    private readonly MessageBus _messageBus;
+    private readonly ChatMediator _mediator;
 
     private readonly Dictionary<string, User> _users = [];
     private readonly List<ChatMessage> _messages = [];
 
-    public ChatRoomService(MessageBus messageBus, ILogger<ChatRoomService> logger)
+    public ChatRoomService(ChatMediator mediator, ILogger<ChatRoomService> logger)
     {
-        _messageBus = messageBus;
+        _mediator = mediator;
         _logger = logger;
     }
 
@@ -31,14 +32,14 @@ public class ChatRoomService
         _messages.Add(message);
 
         _logger.LogInformation($"Message sent by {senderId}: {content}");
-        await _messageBus.Publish(new StoreMessageRequest(message));
-        await _messageBus.Publish(new TrackMessageSentRequest(senderId, type.ToString()));
+        await _mediator.Publish(new StoreMessageNotification(message));
+        await _mediator.Publish(new TrackMessageSentNotification(senderId, type.ToString()));
 
         if (type == MessageType.Private && targetUserId != null)
         {
             if (_users.TryGetValue(targetUserId, out var targetUser))
             {
-                await _messageBus.Publish(new NotifyUserOfMessageRequest(targetUser, message));
+                await _mediator.Publish(new NotifyUserOfMessageNotification(targetUser, message));
             }
         }
         else if (type == MessageType.Public)
@@ -47,19 +48,19 @@ public class ChatRoomService
             {
                 if (user.Id != senderId)
                 {
-                    await _messageBus.Publish(new NotifyUserOfMessageRequest(user, message));
+                    await _mediator.Publish(new NotifyUserOfMessageNotification(user, message));
                 }
             }
         }
 
-        await _messageBus.Publish(new UpdateUserActivityRequest(senderId));
+        await _mediator.Publish(new UpdateUserActivityNotification(senderId));
     }
 
     public async Task AddUserAsync(User user)
     {
         _users[user.Id] = user;
         _logger.LogInformation($"User {user.Name} joined the chat room");
-        await _messageBus.Publish(new RegisterUserRequest(user));
+        await _mediator.Publish(new RegisterUserNotification(user));
 
         var systemMessage = new ChatMessage(
             "SYSTEM",
@@ -67,7 +68,7 @@ public class ChatRoomService
             MessageType.System
         );
         _messages.Add(systemMessage);
-        await _messageBus.Publish(new StoreMessageRequest(systemMessage));
+        await _mediator.Publish(new StoreMessageNotification(systemMessage));
     }
 
     public async Task ChangeUserStatusAsync(string userId, UserStatus newStatus)
@@ -78,10 +79,10 @@ public class ChatRoomService
             user = user with { Status = newStatus };
 
             _logger.LogInformation($"User {user.Name} status changed to {newStatus}");
-            await _messageBus.Publish(
-                new NotifyUserStatusChangeRequest(user, oldStatus, newStatus)
+            await _mediator.Publish(
+                new NotifyUserStatusChangeNotification(user, oldStatus, newStatus)
             );
-            await _messageBus.Publish(new UpdateUserStatusRequest(userId, newStatus));
+            await _mediator.Publish(new UpdateUserStatusNotification(userId, newStatus));
         }
     }
 }

@@ -1,4 +1,5 @@
 using Mediators.Messaging;
+using Mediators.Messaging.Notifications;
 using Microsoft.Extensions.Logging;
 
 namespace Mediators.Services;
@@ -6,17 +7,17 @@ namespace Mediators.Services;
 public class PushNotificationService
 {
     private readonly ILogger<PushNotificationService> _logger;
-    private readonly MessageBus _messageBus;
+    private readonly ChatMediator _mediator;
 
-    public PushNotificationService(MessageBus messageBus, ILogger<PushNotificationService> logger)
+    public PushNotificationService(ChatMediator mediator, ILogger<PushNotificationService> logger)
     {
         _logger = logger;
-        _messageBus = messageBus;
+        _mediator = mediator;
 
-        _messageBus.Subscribe<SendPushNotificationRequest>(SendPushNotificationAsync);
+        _mediator.Subscribe<SendPushNotificationNotification>(SendPushNotificationAsync);
     }
 
-    private async Task SendPushNotificationAsync(SendPushNotificationRequest message)
+    private async Task SendPushNotificationAsync(SendPushNotificationNotification message)
     {
         await Task.Yield();
         // Simulate sending push notification

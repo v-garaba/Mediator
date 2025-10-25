@@ -1,4 +1,5 @@
 using Mediators.Messaging;
+using Mediators.Messaging.Notifications;
 using Mediators.Models;
 using Microsoft.Extensions.Logging;
 
@@ -10,56 +11,56 @@ namespace Mediators.Services;
 public class NotificationService
 {
     private readonly ILogger<NotificationService> _logger;
-    private readonly MessageBus _messageBus;
+    private readonly ChatMediator _mediator;
 
-    public NotificationService(MessageBus messageBus, ILogger<NotificationService> logger)
+    public NotificationService(ChatMediator mediator, ILogger<NotificationService> logger)
     {
         _logger = logger;
-        _messageBus = messageBus;
+        _mediator = mediator;
 
-        _messageBus.Subscribe<NotifyUserOfMessageRequest>(NotifyUserOfMessageAsync);
-        _messageBus.Subscribe<NotifyUserStatusChangeRequest>(NotifyUserStatusChangeAsync);
+        _mediator.Subscribe<NotifyUserOfMessageNotification>(NotifyUserOfMessageAsync);
+        _mediator.Subscribe<NotifyUserStatusChangeNotification>(NotifyUserStatusChangeAsync);
     }
 
-    private async Task NotifyUserOfMessageAsync(NotifyUserOfMessageRequest request)
+    private async Task NotifyUserOfMessageAsync(NotifyUserOfMessageNotification Notification)
     {
-        _logger.LogInformation($"Notifying user {request.User.Name} of new message");
+        _logger.LogInformation($"Notifying user {Notification.User.Name} of new message");
 
         // BAD: Tight coupling - directly calling multiple services
-        if (request.User.Status == UserStatus.Offline)
+        if (Notification.User.Status == UserStatus.Offline)
         {
-            await _messageBus.Publish(
-                new EmailRequest(request.User.Email, "New Message", request.Message.Content)
+            await _mediator.Publish(
+                new EmailNotification(Notification.User.Email, "New Message", Notification.Message.Content)
             );
-            await _messageBus.Publish(
-                new SendSmsRequest(request.User.Id, $"New message from {request.Message.SenderId}")
+            await _mediator.Publish(
+                new SendSmsNotification(Notification.User.Id, $"New message from {Notification.Message.SenderId}")
             );
         }
         else
         {
-            await _messageBus.Publish(
-                new SendPushNotificationRequest(request.User.Id, request.Message.Content)
+            await _mediator.Publish(
+                new SendPushNotificationNotification(Notification.User.Id, Notification.Message.Content)
             );
         }
 
-        await _messageBus.Publish(
-            new TrackMessageNotificationRequest(request.User.Id, request.Message.Id)
+        await _mediator.Publish(
+            new TrackMessageNotification(Notification.User.Id, Notification.Message.Id)
         );
     }
 
-    private async Task NotifyUserStatusChangeAsync(NotifyUserStatusChangeRequest request)
+    private async Task NotifyUserStatusChangeAsync(NotifyUserStatusChangeNotification Notification)
     {
         _logger.LogInformation(
-            $"User {request.User.Name} status changed from {request.OldStatus} to {request.NewStatus}"
+            $"User {Notification.User.Name} status changed from {Notification.OldStatus} to {Notification.NewStatus}"
         );
 
-        if (request.NewStatus == UserStatus.Online)
+        if (Notification.NewStatus == UserStatus.Online)
         {
-            await _messageBus.Publish(
-                new SendPushNotificationRequest(request.User.Id, "You are now online")
+            await _mediator.Publish(
+                new SendPushNotificationNotification(Notification.User.Id, "You are now online")
             );
-            await _messageBus.Publish(
-                new TrackUserStatusChangeRequest(request.User.Id, request.NewStatus.ToString())
+            await _mediator.Publish(
+                new TrackUserStatusChangeNotification(Notification.User.Id, Notification.NewStatus.ToString())
             );
         }
     }

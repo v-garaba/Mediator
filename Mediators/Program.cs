@@ -1,4 +1,5 @@
 ﻿using Mediators.Messaging;
+using Mediators.Messaging.Requests;
 using Mediators.Models;
 using Mediators.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,7 +21,7 @@ class Program
             .AddSingleton<MessageStorageService>()
             .AddSingleton<UserManagementService>()
             .AddSingleton<NotificationService>()
-            .AddSingleton<MessageBus>()
+            .AddSingleton<ChatMediator>()
             .AddSingleton<ChatRoomService>()
             .BuildServiceProvider();
 
@@ -30,7 +31,7 @@ class Program
         serviceProvider.GetRequiredService<EmailService>();
         serviceProvider.GetRequiredService<SmsService>();
         serviceProvider.GetRequiredService<PushNotificationService>();
-        serviceProvider.GetRequiredService<AnalyticsService>();
+        var analytics = serviceProvider.GetRequiredService<AnalyticsService>();
         serviceProvider.GetRequiredService<MessageStorageService>();
         serviceProvider.GetRequiredService<UserManagementService>();
         serviceProvider.GetRequiredService<NotificationService>();
@@ -97,10 +98,19 @@ class Program
 
         Console.WriteLine("\n--- Message sent to offline user ---\n");
 
-        var analytics = serviceProvider.GetRequiredService<AnalyticsService>();
-        logger.LogInformation($"\nAlice received {analytics.GetMessageCount("1")} notifications");
-        logger.LogInformation($"Bob received {analytics.GetMessageCount("2")} notifications");
-        logger.LogInformation($"Charlie received {analytics.GetMessageCount("3")} notifications");
+        var mediator = serviceProvider.GetRequiredService<ChatMediator>();
+        var getMessageResponse1 = await mediator
+            .Send(new GetMessageCountRequest("1"))
+            .ConfigureAwait(false);
+        var getMessageResponse2 = await mediator
+            .Send(new GetMessageCountRequest("2"))
+            .ConfigureAwait(false);
+        var getMessageResponse3 = await mediator
+            .Send(new GetMessageCountRequest("3"))
+            .ConfigureAwait(false);
+        logger.LogInformation($"\nAlice received {getMessageResponse1.Count} notifications");
+        logger.LogInformation($"Bob received {getMessageResponse2.Count} notifications");
+        logger.LogInformation($"Charlie received {getMessageResponse3.Count} notifications");
 
         logger.LogInformation("\n=== Chat Room Application Finished ===");
         logger.LogInformation("\nPROBLEMS WITH CURRENT DESIGN:");

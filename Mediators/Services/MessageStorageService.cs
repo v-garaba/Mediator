@@ -1,4 +1,5 @@
 using Mediators.Messaging;
+using Mediators.Messaging.Notifications;
 using Mediators.Models;
 using Microsoft.Extensions.Logging;
 
@@ -7,18 +8,18 @@ namespace Mediators.Services;
 public class MessageStorageService
 {
     private readonly ILogger<MessageStorageService> _logger;
-    private readonly MessageBus _messageBus;
+    private readonly ChatMediator _mediator;
     private readonly List<ChatMessage> _storage = [];
 
-    public MessageStorageService(MessageBus messageBus, ILogger<MessageStorageService> logger)
+    public MessageStorageService(ChatMediator mediator, ILogger<MessageStorageService> logger)
     {
         _logger = logger;
-        _messageBus = messageBus;
+        _mediator = mediator;
 
-        _messageBus.Subscribe<StoreMessageRequest>(StoreMessageAsync);
+        _mediator.Subscribe<StoreMessageNotification>(StoreMessageAsync);
     }
 
-    private async Task StoreMessageAsync(StoreMessageRequest message)
+    private async Task StoreMessageAsync(StoreMessageNotification message)
     {
         await Task.Yield();
         _storage.Add(message.Message);

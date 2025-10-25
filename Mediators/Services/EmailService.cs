@@ -1,4 +1,5 @@
 using Mediators.Messaging;
+using Mediators.Messaging.Notifications;
 using Microsoft.Extensions.Logging;
 
 namespace Mediators.Services;
@@ -6,18 +7,18 @@ namespace Mediators.Services;
 public class EmailService
 {
     private readonly ILogger<EmailService> _logger;
-    private readonly MessageBus _messageBus;
+    private readonly ChatMediator _mediator;
 
-    public EmailService(MessageBus messageBus, ILogger<EmailService> logger)
+    public EmailService(ChatMediator mediator, ILogger<EmailService> logger)
     {
         _logger = logger;
-        _messageBus = messageBus;
+        _mediator = mediator;
 
         // Subscribing to email messages
-        _messageBus.Subscribe<EmailRequest>(SendEmailAsync);
+        _mediator.Subscribe<EmailNotification>(SendEmailAsync);
     }
 
-    private async Task SendEmailAsync(EmailRequest email)
+    private async Task SendEmailAsync(EmailNotification email)
     {
         await Task.Yield();
         // Simulate sending email

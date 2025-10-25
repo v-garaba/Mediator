@@ -1,4 +1,5 @@
 using Mediators.Messaging;
+using Mediators.Messaging.Notifications;
 using Mediators.Models;
 using Microsoft.Extensions.Logging;
 
@@ -6,47 +7,47 @@ namespace Mediators.Services;
 
 public class UserManagementService
 {
-    private readonly MessageBus _messageBus;
+    private readonly ChatMediator _mediator;
     private readonly ILogger<UserManagementService> _logger;
     private readonly Dictionary<string, User> _registeredUsers = [];
 
-    public UserManagementService(MessageBus messageBus, ILogger<UserManagementService> logger)
+    public UserManagementService(ChatMediator mediator, ILogger<UserManagementService> logger)
     {
         _logger = logger;
-        _messageBus = messageBus;
+        _mediator = mediator;
 
-        _messageBus.Subscribe<RegisterUserRequest>(RegisterUserAsync);
-        _messageBus.Subscribe<UpdateUserActivityRequest>(UpdateUserActivityAsync);
-        _messageBus.Subscribe<UpdateUserStatusRequest>(UpdateUserStatusAsync);
+        _mediator.Subscribe<RegisterUserNotification>(RegisterUserAsync);
+        _mediator.Subscribe<UpdateUserActivityNotification>(UpdateUserActivityAsync);
+        _mediator.Subscribe<UpdateUserStatusNotification>(UpdateUserStatusAsync);
     }
 
-    private async Task RegisterUserAsync(RegisterUserRequest request)
+    private async Task RegisterUserAsync(RegisterUserNotification Notification)
     {
         await Task.Yield();
-        _registeredUsers[request.User.Id] = request.User;
-        _logger.LogInformation($"[USER MGMT] User {request.User.Name} registered");
+        _registeredUsers[Notification.User.Id] = Notification.User;
+        _logger.LogInformation($"[USER MGMT] User {Notification.User.Name} registered");
     }
 
-    private async Task UpdateUserActivityAsync(UpdateUserActivityRequest request)
+    private async Task UpdateUserActivityAsync(UpdateUserActivityNotification Notification)
     {
         await Task.Yield();
-        if (_registeredUsers.TryGetValue(request.UserId, out var user))
+        if (_registeredUsers.TryGetValue(Notification.UserId, out var user))
         {
             user = user with { LastActiveTime = DateTime.UtcNow };
-            _registeredUsers[request.UserId] = user;
-            _logger.LogInformation($"[USER MGMT] User {request.UserId} activity updated");
+            _registeredUsers[Notification.UserId] = user;
+            _logger.LogInformation($"[USER MGMT] User {Notification.UserId} activity updated");
         }
     }
 
-    private async Task UpdateUserStatusAsync(UpdateUserStatusRequest request)
+    private async Task UpdateUserStatusAsync(UpdateUserStatusNotification Notification)
     {
         await Task.Yield();
-        if (_registeredUsers.TryGetValue(request.UserId, out var user))
+        if (_registeredUsers.TryGetValue(Notification.UserId, out var user))
         {
-            user = user with { Status = request.Status };
-            _registeredUsers[request.UserId] = user;
+            user = user with { Status = Notification.Status };
+            _registeredUsers[Notification.UserId] = user;
             _logger.LogInformation(
-                $"[USER MGMT] User {request.UserId} status updated to {request.Status}"
+                $"[USER MGMT] User {Notification.UserId} status updated to {Notification.Status}"
             );
         }
     }

@@ -1,4 +1,5 @@
 using Mediators.Messaging;
+using Mediators.Messaging.Notifications;
 using Microsoft.Extensions.Logging;
 
 namespace Mediators.Services;
@@ -6,17 +7,17 @@ namespace Mediators.Services;
 public class SmsService
 {
     private readonly ILogger<SmsService> _logger;
-    private readonly MessageBus _messageBus;
+    private readonly ChatMediator _mediator;
 
-    public SmsService(MessageBus messageBus, ILogger<SmsService> logger)
+    public SmsService(ChatMediator mediator, ILogger<SmsService> logger)
     {
         _logger = logger;
-        _messageBus = messageBus;
+        _mediator = mediator;
 
-        _messageBus.Subscribe<SendSmsRequest>(SendSmsAsync);
+        _mediator.Subscribe<SendSmsNotification>(SendSmsAsync);
     }
 
-    private async Task SendSmsAsync(SendSmsRequest message)
+    private async Task SendSmsAsync(SendSmsNotification message)
     {
         await Task.Yield();
         // Simulate sending SMS

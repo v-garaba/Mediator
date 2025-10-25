@@ -1,26 +1,32 @@
 using Mediators.Messaging;
+using Mediators.Messaging.Notifications;
+using Mediators.Messaging.Requests;
 using Microsoft.Extensions.Logging;
 
 namespace Mediators.Services;
 
 public class AnalyticsService
 {
-    private readonly MessageBus _messageBus;
+    private readonly ChatMediator _mediator;
     private readonly ILogger<AnalyticsService> _logger;
     private readonly Dictionary<string, int> _messageCount = [];
     private readonly Dictionary<string, List<string>> _statusHistory = [];
 
-    public AnalyticsService(MessageBus messageBus, ILogger<AnalyticsService> logger)
+    public AnalyticsService(ChatMediator mediator, ILogger<AnalyticsService> logger)
     {
-        _messageBus = messageBus;
+        _mediator = mediator;
         _logger = logger;
 
-        _messageBus.Subscribe<TrackMessageNotificationRequest>(TrackMessageNotification);
-        _messageBus.Subscribe<TrackUserStatusChangeRequest>(TrackUserStatusChange);
-        _messageBus.Subscribe<TrackMessageSentRequest>(TrackMessageSent);
+        _mediator.Subscribe<TrackMessageNotification>(TrackMessageNotification);
+        _mediator.Subscribe<TrackUserStatusChangeNotification>(TrackUserStatusChange);
+        _mediator.Subscribe<TrackMessageSentNotification>(TrackMessageSent);
+
+        _mediator.RegisterHandler<GetMessageCountRequest, GetMessageCountResponse>(
+            GetMessageCount
+        );
     }
 
-    private async Task TrackMessageNotification(TrackMessageNotificationRequest message)
+    private async Task TrackMessageNotification(TrackMessageNotification message)
     {
         await Task.Yield();
         if (!_messageCount.TryGetValue(message.UserId, out int value))
@@ -35,7 +41,7 @@ public class AnalyticsService
         );
     }
 
-    private async Task TrackUserStatusChange(TrackUserStatusChangeRequest message)
+    private async Task TrackUserStatusChange(TrackUserStatusChangeNotification message)
     {
         await Task.Yield();
         if (!_statusHistory.TryGetValue(message.UserId, out List<string>? value))
@@ -51,7 +57,7 @@ public class AnalyticsService
         );
     }
 
-    private async Task TrackMessageSent(TrackMessageSentRequest message)
+    private async Task TrackMessageSent(TrackMessageSentNotification message)
     {
         await Task.Yield();
         _logger.LogInformation(
@@ -59,8 +65,10 @@ public class AnalyticsService
         );
     }
 
-    public int GetMessageCount(string userId)
+    private async Task<GetMessageCountResponse> GetMessageCount(GetMessageCountRequest request)
     {
-        return _messageCount.GetValueOrDefault(userId, 0);
+        await Task.Yield();
+        int count = _messageCount.GetValueOrDefault(request.UserId, 0);
+        return new GetMessageCountResponse(count);
     }
 }
