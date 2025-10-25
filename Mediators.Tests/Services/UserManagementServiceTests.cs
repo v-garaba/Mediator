@@ -21,7 +21,7 @@ public class UserManagementServiceTests
     public void RegisterUser_AddsUserToCollection()
     {
         // Arrange
-        var user = new User("1", "Alice", "alice@example.com");
+        var user = new User("1", "Alice", "alice@example.com", DateTime.MinValue, UserStatus.Offline);
 
         // Act
         _userManagementService.RegisterUser(user);
@@ -46,7 +46,7 @@ public class UserManagementServiceTests
     public void UpdateUserActivity_UpdatesLastActiveTime()
     {
         // Arrange
-        var user = new User("1", "Alice", "alice@example.com");
+        var user = new User("1", "Alice", "alice@example.com", DateTime.MinValue, UserStatus.Offline);
         _userManagementService.RegisterUser(user);
         var originalTime = user.LastActiveTime;
 
@@ -65,7 +65,7 @@ public class UserManagementServiceTests
     public void UpdateUserStatus_ChangesUserStatus()
     {
         // Arrange
-        var user = new User("1", "Alice", "alice@example.com");
+        var user = new User("1", "Alice", "alice@example.com", DateTime.MinValue, UserStatus.Offline);
         _userManagementService.RegisterUser(user);
 
         // Act

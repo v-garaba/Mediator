@@ -23,7 +23,7 @@ public class UserManagementService
     {
         if (_registeredUsers.TryGetValue(userId, out var user))
         {
-            user.LastActiveTime = DateTime.UtcNow;
+            user = user with { LastActiveTime = DateTime.UtcNow };
             _logger.LogInformation($"[USER MGMT] User {userId} activity updated");
         }
     }
@@ -32,7 +32,7 @@ public class UserManagementService
     {
         if (_registeredUsers.TryGetValue(userId, out var user))
         {
-            user.Status = status;
+            user = user with { Status = status };
             _logger.LogInformation($"[USER MGMT] User {userId} status updated to {status}");
         }
     }

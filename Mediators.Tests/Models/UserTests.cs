@@ -9,7 +9,7 @@ public class UserTests
     public void User_Creation_ShouldInitializeWithCorrectValues()
     {
         // Arrange & Act
-        var user = new User("1", "Alice", "alice@example.com");
+        var user = new User("1", "Alice", "alice@example.com", DateTime.MinValue, UserStatus.Offline);
 
         // Assert
         Assert.That(user.Id, Is.EqualTo("1"));
@@ -22,10 +22,10 @@ public class UserTests
     public void User_StatusChange_ShouldUpdateCorrectly()
     {
         // Arrange
-        var user = new User("1", "Alice", "alice@example.com");
+        var user = new User("1", "Alice", "alice@example.com", DateTime.MinValue, UserStatus.Offline);
 
         // Act
-        user.Status = UserStatus.Online;
+        user = user with { Status = UserStatus.Online };
 
         // Assert
         Assert.That(user.Status, Is.EqualTo(UserStatus.Online));
@@ -35,11 +35,11 @@ public class UserTests
     public void User_LastActiveTime_CanBeUpdated()
     {
         // Arrange
-        var user = new User("1", "Alice", "alice@example.com");
+        var user = new User("1", "Alice", "alice@example.com", DateTime.MinValue, UserStatus.Offline);
         var newTime = DateTime.UtcNow.AddHours(-1);
 
         // Act
-        user.LastActiveTime = newTime;
+        user = user with { LastActiveTime = newTime };
 
         // Assert
         Assert.That(user.LastActiveTime, Is.EqualTo(newTime));

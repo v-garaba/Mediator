@@ -3,29 +3,21 @@ namespace Mediators.Models;
 /// <summary>
 /// Represents a chat message
 /// </summary>
-public class ChatMessage
+public sealed record ChatMessage(
+    string SenderId,
+    string Content,
+    MessageType Type,
+    string? TargetUserId = null
+)
 {
-    public string Id { get; init; }
-    public string SenderId { get; init; }
-    public string Content { get; init; }
-    public DateTime Timestamp { get; init; }
-    public MessageType Type { get; init; }
-    public string? TargetUserId { get; init; } // For private messages
-
-    public ChatMessage(string senderId, string content, MessageType type, string? targetUserId = null)
-    {
-        Id = Guid.NewGuid().ToString();
-        SenderId = senderId;
-        Content = content;
-        Type = type;
-        TargetUserId = targetUserId;
-        Timestamp = DateTime.UtcNow;
-    }
+    private Guid InternalId { get; init; } = Guid.NewGuid();
+    public string Id => InternalId.ToString();
+    public DateTime Timestamp { get; init; } = DateTime.UtcNow;
 }
 
 public enum MessageType
 {
     Public,
     Private,
-    System
+    System,
 }

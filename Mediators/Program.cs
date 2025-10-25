@@ -28,9 +28,9 @@ class Program
         logger.LogInformation("=== Chat Room Application Started ===\n");
 
         // Create users
-        var alice = new User("1", "Alice", "alice@example.com");
-        var bob = new User("2", "Bob", "bob@example.com");
-        var charlie = new User("3", "Charlie", "charlie@example.com");
+        var alice = new User("1", "Alice", "alice@example.com", DateTime.MinValue, UserStatus.Offline);
+        var bob = new User("2", "Bob", "bob@example.com", DateTime.MinValue, UserStatus.Offline);
+        var charlie = new User("3", "Charlie", "charlie@example.com", DateTime.MinValue, UserStatus.Offline);
 
         // Add users to chat room
         chatRoom.AddUser(alice);

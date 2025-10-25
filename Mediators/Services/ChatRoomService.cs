@@ -99,7 +99,7 @@ public class ChatRoomService
         if (_users.TryGetValue(userId, out var user))
         {
             var oldStatus = user.Status;
-            user.Status = newStatus;
+            user = user with { Status = newStatus };
 
             _logger.LogInformation($"User {user.Name} status changed to {newStatus}");
 
