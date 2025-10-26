@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Mediators.Messaging;
 using Mediators.Messaging.Notifications;
 using Mediators.Models;
@@ -6,16 +5,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Mediators.Clients;
 
-public class ChatRoom
+public class ChatRoom(ChatMediator mediator, ILogger<ChatRoom> logger)
 {
-    private readonly ILogger<ChatRoom> _logger;
-    private readonly ChatMediator _mediator;
-
-    public ChatRoom(ChatMediator mediator, ILogger<ChatRoom> logger)
-    {
-        _mediator = mediator;
-        _logger = logger;
-    }
+    private readonly ILogger<ChatRoom> _logger = logger;
+    private readonly ChatMediator _mediator = mediator;
 
     public async Task SendMessageAsync(
         string senderId,
