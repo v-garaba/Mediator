@@ -21,9 +21,7 @@ public class AnalyticsService
         _mediator.Subscribe<TrackUserStatusChangeNotification>(TrackUserStatusChange);
         _mediator.Subscribe<TrackMessageSentNotification>(TrackMessageSent);
 
-        _mediator.RegisterHandler<GetMessageCountRequest, GetMessageCountResponse>(
-            GetMessageCount
-        );
+        _mediator.RegisterHandler<GetMessageCountRequest, GetMessageCountResponse>(GetMessageCount);
     }
 
     private async Task TrackMessageNotification(TrackMessageNotification message)

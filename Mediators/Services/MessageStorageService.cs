@@ -1,5 +1,6 @@
 using Mediators.Messaging;
 using Mediators.Messaging.Notifications;
+using Mediators.Messaging.Requests;
 using Mediators.Models;
 using Microsoft.Extensions.Logging;
 
@@ -17,6 +18,11 @@ public class MessageStorageService
         _mediator = mediator;
 
         _mediator.Subscribe<StoreMessageNotification>(StoreMessageAsync);
+
+        _mediator.RegisterHandler<GetAllMessagesRequest, GetAllMessagesResponse>(GetAllMessages);
+        _mediator.RegisterHandler<GetMessagesByUserRequest, GetMessagesByUserResponse>(
+            GetMessagesByUser
+        );
     }
 
     private async Task StoreMessageAsync(StoreMessageNotification message)
@@ -26,10 +32,17 @@ public class MessageStorageService
         _logger.LogInformation($"[STORAGE] Message {message.Message.Id} stored");
     }
 
-    public IReadOnlyList<ChatMessage> GetAllMessages() => _storage.AsReadOnly();
-
-    public IReadOnlyList<ChatMessage> GetMessagesByUser(string userId)
+    private async Task<GetAllMessagesResponse> GetAllMessages(GetAllMessagesRequest _)
     {
-        return _storage.Where(m => m.SenderId == userId).ToList().AsReadOnly();
+        await Task.Yield();
+        return new GetAllMessagesResponse(_storage.AsReadOnly());
+    }
+
+    private async Task<GetMessagesByUserResponse> GetMessagesByUser(GetMessagesByUserRequest request)
+    {
+        await Task.Yield();
+        return new GetMessagesByUserResponse(
+            _storage.Where(m => m.SenderId == request.UserId).ToList().AsReadOnly()
+        );
     }
 }

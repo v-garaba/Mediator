@@ -1,5 +1,6 @@
 using Mediators.Messaging;
 using Mediators.Messaging.Notifications;
+using Mediators.Messaging.Requests;
 using Mediators.Models;
 using Microsoft.Extensions.Logging;
 
@@ -19,6 +20,8 @@ public class UserManagementService
         _mediator.Subscribe<RegisterUserNotification>(RegisterUserAsync);
         _mediator.Subscribe<UpdateUserActivityNotification>(UpdateUserActivityAsync);
         _mediator.Subscribe<UpdateUserStatusNotification>(UpdateUserStatusAsync);
+
+        _mediator.RegisterHandler<GetUserRequest, GetUserResponse>(GetUser);
     }
 
     private async Task RegisterUserAsync(RegisterUserNotification Notification)
@@ -52,5 +55,9 @@ public class UserManagementService
         }
     }
 
-    public User? GetUser(string userId) => _registeredUsers.GetValueOrDefault(userId);
+    private async Task<GetUserResponse> GetUser(GetUserRequest request)
+    {
+        await Task.Yield();
+        return new GetUserResponse(_registeredUsers.GetValueOrDefault(request.UserId));
+    }
 }

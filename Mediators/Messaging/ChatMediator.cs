@@ -60,7 +60,14 @@ public sealed class ChatMediator : IMediator
             if (handlers.Count > 0)
             {
                 // For simplicity, we only invoke the first registered handler
-                return await handlers[0](request) as TResponse;
+                if (await handlers[0](request) is not TResponse result)
+                {
+                    throw new InvalidOperationException(
+                        $"Handler for request type {request.GetType().FullName} did not return a response"
+                    );
+                }
+
+                return result;
             }
         }
 
