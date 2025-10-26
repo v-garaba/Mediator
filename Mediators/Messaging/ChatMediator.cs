@@ -35,19 +35,21 @@ public sealed class ChatMediator : IMediator
     #endregion
 
     #region IRequestObserver Implementation
-    private readonly Dictionary<Type, List<Func<IRequest, Task<object>>>> _requestHandlers = [];
+    private readonly Dictionary<Type, Func<IRequest, Task<object>>> _requestHandlers = [];
 
     public void RegisterHandler<TRequest, TResponse>(Func<TRequest, Task<TResponse>> handler)
         where TRequest : IRequest<TResponse>
         where TResponse : class
     {
-        if (!_requestHandlers.ContainsKey(typeof(TRequest)))
+        if (_requestHandlers.ContainsKey(typeof(TRequest)))
         {
-            _requestHandlers[typeof(TRequest)] = [];
+            throw new InvalidOperationException(
+                $"Handler for request type {typeof(TRequest).FullName} is already registered"
+            );
         }
 
-        _requestHandlers[typeof(TRequest)]
-            .Add(async req => await handler((TRequest)req).ConfigureAwait(false));
+        _requestHandlers[typeof(TRequest)] = async req =>
+            await handler((TRequest)req).ConfigureAwait(false);
     }
 
     public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
@@ -55,12 +57,12 @@ public sealed class ChatMediator : IMediator
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (_requestHandlers.TryGetValue(request.GetType(), out var handlers))
+        if (_requestHandlers.TryGetValue(request.GetType(), out var handler))
         {
-            if (handlers.Count > 0)
+            if (handler is not null)
             {
                 // For simplicity, we only invoke the first registered handler
-                if (await handlers[0](request) is not TResponse result)
+                if (await handler(request) is not TResponse result)
                 {
                     throw new InvalidOperationException(
                         $"Handler for request type {request.GetType().FullName} did not return a response"
