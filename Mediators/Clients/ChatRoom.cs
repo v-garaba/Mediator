@@ -1,0 +1,44 @@
+using System.Threading.Tasks;
+using Mediators.Messaging;
+using Mediators.Messaging.Notifications;
+using Mediators.Models;
+using Microsoft.Extensions.Logging;
+
+namespace Mediators.Clients;
+
+public class ChatRoom
+{
+    private readonly ILogger<ChatRoom> _logger;
+    private readonly ChatMediator _mediator;
+
+    public ChatRoom(ChatMediator mediator, ILogger<ChatRoom> logger)
+    {
+        _mediator = mediator;
+        _logger = logger;
+    }
+
+    public async Task SendMessageAsync(
+        string senderId,
+        string content,
+        MessageType type,
+        string? targetUserId = null
+    )
+    {
+        _logger.LogInformation(
+            $"[CHAT ROOM] User {senderId} is sending a {(type == MessageType.Private ? "private" : "public")} message"
+        );
+        await _mediator.Publish(new SendMessageNotification(senderId, content, type, targetUserId));
+    }
+
+    public async Task AddUserAsync(User user)
+    {
+        _logger.LogInformation($"[CHAT ROOM] User {user.Name} is joining the chat room");
+        await _mediator.Publish(new AddUserNotification(user));
+    }
+
+    public async Task ChangeUserStatusAsync(string userId, UserStatus newStatus)
+    {
+        _logger.LogInformation($"[CHAT ROOM] User {userId} is changing status to {newStatus}");
+        await _mediator.Publish(new ChangeUserStatusNotification(userId, newStatus));
+    }
+}

@@ -18,71 +18,78 @@ public class ChatRoomService
     {
         _mediator = mediator;
         _logger = logger;
+
+        _mediator.Subscribe<SendMessageNotification>(SendMessageAsync);
+        _mediator.Subscribe<AddUserNotification>(AddUserAsync);
+        _mediator.Subscribe<ChangeUserStatusNotification>(ChangeUserStatusAsync);
     }
 
-    // BAD: This method orchestrates too many things
-    public async Task SendMessageAsync(
-        string senderId,
-        string content,
-        MessageType type,
-        string? targetUserId = null
-    )
+    private async Task SendMessageAsync(SendMessageNotification notification)
     {
-        var message = new ChatMessage(senderId, content, type, targetUserId);
+        var message = new ChatMessage(
+            notification.SenderId,
+            notification.Content,
+            notification.Type,
+            notification.TargetUserId
+        );
         _messages.Add(message);
 
-        _logger.LogInformation($"Message sent by {senderId}: {content}");
+        _logger.LogInformation($"Message sent by {notification.SenderId}: {notification.Content}");
         await _mediator.Publish(new StoreMessageNotification(message));
-        await _mediator.Publish(new TrackMessageSentNotification(senderId, type.ToString()));
+        await _mediator.Publish(
+            new TrackMessageSentNotification(notification.SenderId, notification.Type.ToString())
+        );
 
-        if (type == MessageType.Private && targetUserId != null)
+        if (notification.Type == MessageType.Private && notification.TargetUserId != null)
         {
-            if (_users.TryGetValue(targetUserId, out var targetUser))
+            if (_users.TryGetValue(notification.TargetUserId, out var targetUser))
             {
                 await _mediator.Publish(new NotifyUserOfMessageNotification(targetUser, message));
             }
         }
-        else if (type == MessageType.Public)
+        else if (notification.Type == MessageType.Public)
         {
             foreach (var user in _users.Values)
             {
-                if (user.Id != senderId)
+                if (user.Id != notification.SenderId)
                 {
                     await _mediator.Publish(new NotifyUserOfMessageNotification(user, message));
                 }
             }
         }
 
-        await _mediator.Publish(new UpdateUserActivityNotification(senderId));
+        await _mediator.Publish(new UpdateUserActivityNotification(notification.SenderId));
     }
 
-    public async Task AddUserAsync(User user)
+    private async Task AddUserAsync(AddUserNotification notification)
     {
-        _users[user.Id] = user;
-        _logger.LogInformation($"User {user.Name} joined the chat room");
-        await _mediator.Publish(new RegisterUserNotification(user));
+        _users[notification.User.Id] = notification.User;
+        _logger.LogInformation($"User {notification.User.Name} joined the chat room");
+        await _mediator.Publish(new RegisterUserNotification(notification.User));
 
         var systemMessage = new ChatMessage(
             "SYSTEM",
-            $"{user.Name} joined the chat",
+            $"{notification.User.Name} joined the chat",
             MessageType.System
         );
         _messages.Add(systemMessage);
         await _mediator.Publish(new StoreMessageNotification(systemMessage));
     }
 
-    public async Task ChangeUserStatusAsync(string userId, UserStatus newStatus)
+    private async Task ChangeUserStatusAsync(ChangeUserStatusNotification notification)
     {
-        if (_users.TryGetValue(userId, out var user))
+        if (_users.TryGetValue(notification.UserId, out var user))
         {
             var oldStatus = user.Status;
-            user = user with { Status = newStatus };
+            user = user with { Status = notification.NewStatus };
 
-            _logger.LogInformation($"User {user.Name} status changed to {newStatus}");
+            _logger.LogInformation($"User {user.Name} status changed to {notification.NewStatus}");
             await _mediator.Publish(
-                new NotifyUserStatusChangeNotification(user, oldStatus, newStatus)
+                new NotifyUserStatusChangeNotification(user, oldStatus, notification.NewStatus)
             );
-            await _mediator.Publish(new UpdateUserStatusNotification(userId, newStatus));
+            await _mediator.Publish(
+                new UpdateUserStatusNotification(notification.UserId, notification.NewStatus)
+            );
         }
     }
 }

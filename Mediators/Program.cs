@@ -1,4 +1,5 @@
-﻿using Mediators.Messaging;
+﻿using Mediators.Clients;
+using Mediators.Messaging;
 using Mediators.Messaging.Requests;
 using Mediators.Models;
 using Mediators.Services;
@@ -23,6 +24,7 @@ class Program
             .AddSingleton<NotificationService>()
             .AddSingleton<ChatMediator>()
             .AddSingleton<ChatRoomService>()
+            .AddSingleton<ChatRoom>()
             .BuildServiceProvider();
 
         var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
@@ -35,8 +37,9 @@ class Program
         serviceProvider.GetRequiredService<MessageStorageService>();
         serviceProvider.GetRequiredService<UserManagementService>();
         serviceProvider.GetRequiredService<NotificationService>();
+        serviceProvider.GetRequiredService<ChatRoomService>();
 
-        var chatRoom = serviceProvider.GetRequiredService<ChatRoomService>();
+        var chatRoom = serviceProvider.GetRequiredService<ChatRoom>();
 
         logger.LogInformation("=== Chat Room Application Started ===\n");
 
