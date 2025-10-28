@@ -1,6 +1,7 @@
-using Mediators.Messaging;
+﻿using Mediators.Messaging;
 using Mediators.Messaging.Notifications;
 using Mediators.Messaging.Requests;
+using Mediators.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Mediators.Services;
@@ -9,8 +10,8 @@ public class AnalyticsService
 {
     private readonly ChatMediator _mediator;
     private readonly ILogger<AnalyticsService> _logger;
-    private readonly Dictionary<string, int> _messageCount = [];
-    private readonly Dictionary<string, List<string>> _statusHistory = [];
+    private readonly Dictionary<UserRef, int> _messageCount = [];
+    private readonly Dictionary<UserRef, List<string>> _statusHistory = [];
 
     public AnalyticsService(ChatMediator mediator, ILogger<AnalyticsService> logger)
     {
@@ -48,7 +49,7 @@ public class AnalyticsService
             _statusHistory[message.UserId] = value;
         }
 
-        value.Add($"{message.Status} at {DateTime.UtcNow}");
+        value.Add($"{message.Status} at {DateTimeOffset.UtcNow}");
 
         _logger.LogInformation(
             $"[ANALYTICS] Status change tracked for user {message.UserId}: {message.Status}"

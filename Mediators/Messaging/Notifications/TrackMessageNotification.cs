@@ -1,3 +1,5 @@
+﻿using Mediators.Models;
+
 namespace Mediators.Messaging.Notifications;
 
-public sealed record TrackMessageNotification(string UserId, string MessageId) : INotification;
+public sealed record TrackMessageNotification(UserRef UserId, MessageRef MessageId) : INotification;

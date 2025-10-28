@@ -1,6 +1,6 @@
-using Mediators.Models;
+﻿using Mediators.Models;
 
 namespace Mediators.Messaging.Notifications;
 
-public sealed record ChangeUserStatusNotification(string UserId, UserStatus NewStatus)
+public sealed record ChangeUserStatusNotification(UserRef UserId, UserStatus NewStatus)
     : INotification;

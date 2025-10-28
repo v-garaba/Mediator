@@ -1,3 +1,5 @@
+﻿using Mediators.Messaging.Notifications;
+using Mediators.Models;
 using Mediators.Services;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
@@ -20,7 +22,7 @@ public class AnalyticsServiceTests
     public void TrackMessageNotification_IncreasesCount()
     {
         // Arrange
-        var userId = "user1";
+        var userId = new UserRef();
 
         // Act
         _analyticsService.TrackMessageNotification(userId, "msg1");
@@ -58,16 +60,16 @@ public class AnalyticsServiceTests
     public void MultipleUsers_TrackSeparately()
     {
         // Arrange
-        var user1 = "user1";
-        var user2 = "user2";
+        var user1 = new UserRef();
+        var user2 = new UserRef();
 
         // Act
-        _analyticsService.TrackMessageNotification(user1, "msg1");
-        _analyticsService.TrackMessageNotification(user1, "msg2");
-        _analyticsService.TrackMessageNotification(user2, "msg3");
+        _analyticsService.TrackMessageNotification(new TrackMessageNotification(user1, new MessageRef()));
+        _analyticsService.TrackMessageNotification(new TrackMessageNotification(user1, new MessageRef()));
+        _analyticsService.TrackMessageNotification(new TrackMessageNotification(user1, new MessageRef()));
 
         // Assert
-        Assert.That(_analyticsService.GetMessageCount(user1), Is.EqualTo(2));
+        Assert.That(_analyticsService.GetMessageCount(new Mes user1), Is.EqualTo(2));
         Assert.That(_analyticsService.GetMessageCount(user2), Is.EqualTo(1));
     }
 }

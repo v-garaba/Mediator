@@ -1,4 +1,4 @@
-using Mediators.Messaging;
+﻿using Mediators.Messaging;
 using Mediators.Messaging.Notifications;
 using Mediators.Messaging.Requests;
 using Mediators.Models;
@@ -10,7 +10,7 @@ public class UserManagementService
 {
     private readonly ChatMediator _mediator;
     private readonly ILogger<UserManagementService> _logger;
-    private readonly Dictionary<string, User> _registeredUsers = [];
+    private readonly Dictionary<UserRef, User> _registeredUsers = [];
 
     public UserManagementService(ChatMediator mediator, ILogger<UserManagementService> logger)
     {
@@ -36,7 +36,7 @@ public class UserManagementService
         await Task.Yield();
         if (_registeredUsers.TryGetValue(Notification.UserId, out var user))
         {
-            user = user with { LastActiveTime = DateTime.UtcNow };
+            user = user with { LastActiveTime = DateTimeOffset.UtcNow };
             _registeredUsers[Notification.UserId] = user;
             _logger.LogInformation($"[USER MGMT] User {Notification.UserId} activity updated");
         }

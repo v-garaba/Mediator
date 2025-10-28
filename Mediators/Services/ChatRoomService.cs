@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Mediators.Messaging;
 using Mediators.Messaging.Notifications;
 using Mediators.Models;
@@ -8,10 +8,12 @@ namespace Mediators.Services;
 
 public class ChatRoomService
 {
+    private static readonly UserRef SystemRef = new UserRef { Id = new Guid("007CEAF7-42EF-497A-858A-2256618B0C8D") };
+
     private readonly ILogger<ChatRoomService> _logger;
     private readonly ChatMediator _mediator;
 
-    private readonly Dictionary<string, User> _users = [];
+    private readonly Dictionary<UserRef, User> _users = [];
     private readonly List<ChatMessage> _messages = [];
 
     public ChatRoomService(ChatMediator mediator, ILogger<ChatRoomService> logger)
@@ -68,7 +70,7 @@ public class ChatRoomService
         await _mediator.Publish(new RegisterUserNotification(notification.User));
 
         var systemMessage = new ChatMessage(
-            "SYSTEM",
+            SystemRef,
             $"{notification.User.Name} joined the chat",
             MessageType.System
         );

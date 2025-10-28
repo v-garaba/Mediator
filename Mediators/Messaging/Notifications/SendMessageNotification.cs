@@ -1,10 +1,10 @@
-using Mediators.Models;
+﻿using Mediators.Models;
 
 namespace Mediators.Messaging.Notifications;
 
 public sealed record SendMessageNotification(
-    string SenderId,
+    UserRef SenderId,
     string Content,
     MessageType Type,
-    string? TargetUserId = null
+    UserRef? TargetUserId = null
 ) : INotification;

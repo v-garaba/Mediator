@@ -1,4 +1,4 @@
-using Mediators.Models;
+﻿using Mediators.Models;
 using Mediators.Services;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
@@ -21,7 +21,8 @@ public class MessageStorageServiceTests
     public void StoreMessage_AddsMessageToStorage()
     {
         // Arrange
-        var message = new ChatMessage("1", "Test message", MessageType.Public);
+        var user1 = new UserRef();
+        var message = new ChatMessage(user1, "Test message", MessageType.Public);
 
         // Act
         _storageService.StoreMessage(message);
@@ -46,10 +47,13 @@ public class MessageStorageServiceTests
     public void GetMessagesByUser_FiltersCorrectly()
     {
         // Arrange
-        var user1Message = new ChatMessage("user1", "Message from user1", MessageType.Public);
-        var user2Message = new ChatMessage("user2", "Message from user2", MessageType.Public);
+        var user1 = new UserRef();
+        var user2 = new UserRef();
+
+        var user1Message = new ChatMessage(user1, "Message from user1", MessageType.Public);
+        var user2Message = new ChatMessage(user2, "Message from user2", MessageType.Public);
         var anotherUser1Message = new ChatMessage(
-            "user1",
+            user1,
             "Another from user1",
             MessageType.Public
         );
@@ -59,20 +63,21 @@ public class MessageStorageServiceTests
         _storageService.StoreMessage(anotherUser1Message);
 
         // Act
-        var user1Messages = _storageService.GetMessagesByUser("user1");
+        var user1Messages = _storageService.GetMessagesByUser(user1);
 
         // Assert
         Assert.That(user1Messages, Has.Count.EqualTo(2));
-        Assert.That(user1Messages, Has.All.Matches<ChatMessage>(m => m.SenderId == "user1"));
+        Assert.That(user1Messages, Has.All.Matches<ChatMessage>(m => m.SenderId == user1));
     }
 
     [Test]
     public void StoreMultipleMessages_MaintainsOrder()
     {
         // Arrange
-        var message1 = new ChatMessage("1", "First", MessageType.Public);
-        var message2 = new ChatMessage("1", "Second", MessageType.Public);
-        var message3 = new ChatMessage("1", "Third", MessageType.Public);
+        var user1 = new UserRef();
+        var message1 = new ChatMessage(user1, "First", MessageType.Public);
+        var message2 = new ChatMessage(user1, "Second", MessageType.Public);
+        var message3 = new ChatMessage(user1, "Third", MessageType.Public);
 
         // Act
         _storageService.StoreMessage(message1);

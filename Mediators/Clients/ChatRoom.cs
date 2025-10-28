@@ -1,4 +1,4 @@
-using Mediators.Messaging;
+﻿using Mediators.Messaging;
 using Mediators.Messaging.Notifications;
 using Mediators.Models;
 using Microsoft.Extensions.Logging;
@@ -11,10 +11,10 @@ public class ChatRoom(ChatMediator mediator, ILogger<ChatRoom> logger)
     private readonly ChatMediator _mediator = mediator;
 
     public async Task SendMessageAsync(
-        string senderId,
+        UserRef senderId,
         string content,
         MessageType type,
-        string? targetUserId = null
+        UserRef? targetUserId = null
     )
     {
         _logger.LogInformation(
@@ -29,7 +29,7 @@ public class ChatRoom(ChatMediator mediator, ILogger<ChatRoom> logger)
         await _mediator.Publish(new AddUserNotification(user));
     }
 
-    public async Task ChangeUserStatusAsync(string userId, UserStatus newStatus)
+    public async Task ChangeUserStatusAsync(UserRef userId, UserStatus newStatus)
     {
         _logger.LogInformation($"[CHAT ROOM] User {userId} is changing status to {newStatus}");
         await _mediator.Publish(new ChangeUserStatusNotification(userId, newStatus));
