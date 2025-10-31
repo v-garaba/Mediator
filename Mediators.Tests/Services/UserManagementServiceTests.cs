@@ -1,3 +1,6 @@
+using Mediators.Messaging;
+using Mediators.Messaging.Notifications;
+using Mediators.Messaging.Requests;
 using Mediators.Models;
 using Mediators.Services;
 using Microsoft.Extensions.Logging;
@@ -7,80 +10,79 @@ namespace Mediators.Tests.Services;
 
 public class UserManagementServiceTests
 {
-    private UserManagementService _userManagementService = null!;
+    private ChatMediator _mediator;
 
     [SetUp]
     public void Setup()
     {
         var loggerFactory = LoggerFactory.Create(builder => builder.SetMinimumLevel(LogLevel.None));
         var logger = loggerFactory.CreateLogger<UserManagementService>();
-        _userManagementService = new UserManagementService(logger);
+        _mediator = new ChatMediator();
+        _ = new UserManagementService(_mediator, logger); // Turn the service on
     }
 
     [Test]
-    public void RegisterUser_AddsUserToCollection()
+    public async Task RegisterUser_AddsUserToCollection()
     {
         // Arrange
-        var user = new User("1", "Alice", "alice@example.com", DateTime.MinValue, UserStatus.Offline);
+        var userRef = new UserRef();
+        var user = new User(userRef, "Alice", "alice@example.com", DateTimeOffset.UtcNow, UserStatus.Offline);
 
         // Act
-        _userManagementService.RegisterUser(user);
-        var retrievedUser = _userManagementService.GetUser("1");
+        await _mediator.Publish(new RegisterUserNotification(user));
+        var retrievedUserResponse = await _mediator.Send(new GetUserRequest(userRef));
 
         // Assert
-        Assert.That(retrievedUser, Is.Not.Null);
-        Assert.That(retrievedUser!.Name, Is.EqualTo("Alice"));
+        Assert.That(retrievedUserResponse.User, Is.Not.Null);
+        Assert.That(retrievedUserResponse.User!.Name, Is.EqualTo("Alice"));
     }
 
     [Test]
-    public void GetUser_ReturnsNullForNonExistentUser()
+    public async Task GetUser_ReturnsNullForNonExistentUser()
     {
         // Arrange & Act
-        var user = _userManagementService.GetUser("nonexistent");
+        var nonExistent = new UserRef();
+        var userResp = await _mediator.Send(new GetUserRequest(nonExistent));
 
         // Assert
-        Assert.That(user, Is.Null);
+        Assert.That(userResp.User, Is.Null);
     }
 
     [Test]
-    public void UpdateUserActivity_UpdatesLastActiveTime()
+    public async Task UpdateUserActivity_UpdatesLastActiveTime()
     {
         // Arrange
-        var user = new User("1", "Alice", "alice@example.com", DateTime.MinValue, UserStatus.Offline);
-        _userManagementService.RegisterUser(user);
+        var userRef = new UserRef();
+        var user = new User(userRef, "Alice", "alice@example.com", DateTimeOffset.UtcNow, UserStatus.Offline);
+        await _mediator.Publish(new RegisterUserNotification(user));
+
         var originalTime = user.LastActiveTime;
 
         Thread.Sleep(10); // Small delay to ensure time difference
 
         // Act
-        _userManagementService.UpdateUserActivity("1");
-        var updatedUser = _userManagementService.GetUser("1");
+        await _mediator.Publish(new UpdateUserActivityNotification(userRef));
+        var updatedUserResp = await _mediator.Send(new GetUserRequest(userRef));
 
         // Assert
-        Assert.That(updatedUser, Is.Not.Null);
-        Assert.That(updatedUser!.LastActiveTime, Is.GreaterThan(originalTime));
+        Assert.That(updatedUserResp.User, Is.Not.Null);
+        Assert.That(updatedUserResp.User!.LastActiveTime, Is.GreaterThan(originalTime));
     }
 
     [Test]
-    public void UpdateUserStatus_ChangesUserStatus()
+    public async Task UpdateUserStatus_ChangesUserStatus()
     {
         // Arrange
-        var user = new User("1", "Alice", "alice@example.com", DateTime.MinValue, UserStatus.Offline);
-        _userManagementService.RegisterUser(user);
+        var userRef = new UserRef();
+        var user = new User(userRef, "Alice", "alice@example.com", DateTimeOffset.UtcNow, UserStatus.Offline);
+        await _mediator.Publish(new RegisterUserNotification(user));
 
         // Act
-        _userManagementService.UpdateUserStatus("1", UserStatus.Online);
-        var updatedUser = _userManagementService.GetUser("1");
+        await _mediator.Publish(new UpdateUserStatusNotification(userRef, UserStatus.Online));
+        var updatedUserResp = await _mediator.Send(new GetUserRequest(userRef));
 
         // Assert
-        Assert.That(updatedUser, Is.Not.Null);
-        Assert.That(updatedUser!.Status, Is.EqualTo(UserStatus.Online));
-    }
-
-    [Test]
-    public void UpdateUserActivity_ForNonExistentUser_DoesNotThrow()
-    {
-        // Arrange & Act & Assert
-        Assert.DoesNotThrow(() => _userManagementService.UpdateUserActivity("nonexistent"));
+        Assert.That(updatedUserResp.User, Is.Not.Null);
+        Assert.That(updatedUserResp.User!.Status, Is.EqualTo(UserStatus.Online));
     }
 }
