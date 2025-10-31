@@ -1,5 +1,6 @@
 ﻿using Mediators.Models;
 using Mediators.Repository;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Mediators.Messaging.Notifications;
 
@@ -9,11 +10,11 @@ public sealed record HandlePublicMessageNotification(
 ) : INotification;
 
 public sealed class HandlePublicMessageNotificationHandler(
-    IMediator mediator,
+    IServiceProvider serviceProvider,
     IStorage<UserRef, User> userStorage)
     : INotificationHandler<HandlePublicMessageNotification>
 {
-    private readonly IMediator _mediator = mediator.AssertNotNull();
+    private readonly IServiceProvider _serviceProvider = serviceProvider.AssertNotNull();
     private readonly IStorage<UserRef, User> _userStorage = userStorage.AssertNotNull();
 
     public async Task HandleAsync(HandlePublicMessageNotification notification)
@@ -28,7 +29,9 @@ public sealed class HandlePublicMessageNotificationHandler(
         {
             if (user.Id != notification.Message.SenderId)
             {
-                await _mediator.PublishAsync(new NotifyUserOfMessageNotification(user, notification.Message));
+                // Lazy resolve mediator to avoid circular dependency
+                var mediator = _serviceProvider.GetRequiredService<IMediator>();
+                await mediator.PublishAsync(new NotifyUserOfMessageNotification(user, notification.Message));
             }
         }
     }

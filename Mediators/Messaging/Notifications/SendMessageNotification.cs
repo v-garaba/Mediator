@@ -1,5 +1,6 @@
 ﻿using Mediators.Models;
 using Mediators.Repository;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Mediators.Messaging.Notifications;
@@ -12,13 +13,13 @@ public sealed record SendMessageNotification(
 ) : INotification;
 
 public sealed class SendMessageNotificationHandler(
-    IMediator mediator,
+    IServiceProvider serviceProvider,
     IStorage<UserRef, User> userStorage,
     IStorage<MessageRef, ChatMessage> messageStorage,
     ILogger<SendMessageNotificationHandler> logger)
     : INotificationHandler<SendMessageNotification>
 {
-    private readonly IMediator _mediator = mediator.AssertNotNull();
+    private readonly IServiceProvider _serviceProvider = serviceProvider.AssertNotNull();
     private readonly IStorage<UserRef, User> _userStorage = userStorage.AssertNotNull();
     private readonly IStorage<MessageRef, ChatMessage> _messageStorage = messageStorage.AssertNotNull();
     private readonly ILogger<SendMessageNotificationHandler> _logger = logger.AssertNotNull();
@@ -35,23 +36,27 @@ public sealed class SendMessageNotificationHandler(
         await _messageStorage.SetAsync(message);
 
         _logger.LogInformation($"Message sent by {notification.SenderId}: {notification.Content}");
-        await _mediator.PublishAsync(new StoreMessageNotification(message));
-        await _mediator.PublishAsync(
+        
+        // Lazy resolve mediator to avoid circular dependency
+        var mediator = _serviceProvider.GetRequiredService<IMediator>();
+        
+        await mediator.PublishAsync(new StoreMessageNotification(message));
+        await mediator.PublishAsync(
             new TrackMessageSentNotification(notification.SenderId, notification.Type.ToString())
         );
 
         switch (notification.Type)
         {
             case MessageType.Private:
-                await _mediator.PublishAsync(new HandlePrivateMessageNotification(message));
+                await mediator.PublishAsync(new HandlePrivateMessageNotification(message));
                 break;
             case MessageType.Public:
-                await _mediator.PublishAsync(new HandlePublicMessageNotification(message));
+                await mediator.PublishAsync(new HandlePublicMessageNotification(message));
                 break;
             case MessageType.System:
                 break;
         }
 
-        await _mediator.PublishAsync(new UpdateUserActivityNotification(notification.SenderId));
+        await mediator.PublishAsync(new UpdateUserActivityNotification(notification.SenderId));
     }
 }

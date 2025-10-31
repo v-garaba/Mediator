@@ -1,4 +1,5 @@
 using Mediators.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Mediators.Messaging.Notifications;
@@ -10,11 +11,11 @@ public sealed record NotifyUserStatusChangeNotification(
 ) : INotification;
 
 public sealed class NotifyUserStatusChangeNotificationHandler(
-    IMediator mediator,
+    IServiceProvider serviceProvider,
     ILogger<NotifyUserStatusChangeNotificationHandler> logger)
     : INotificationHandler<NotifyUserStatusChangeNotification>
 {
-    private readonly IMediator _mediator = mediator.AssertNotNull();
+    private readonly IServiceProvider _serviceProvider = serviceProvider.AssertNotNull();
     private readonly ILogger<NotifyUserStatusChangeNotificationHandler> _logger = logger.AssertNotNull();
 
     public async Task HandleAsync(NotifyUserStatusChangeNotification notification)
@@ -25,10 +26,13 @@ public sealed class NotifyUserStatusChangeNotificationHandler(
 
         if (notification.NewStatus == UserStatus.Online)
         {
-            await _mediator.PublishAsync(
+            // Lazy resolve mediator to avoid circular dependency
+            var mediator = _serviceProvider.GetRequiredService<IMediator>();
+            
+            await mediator.PublishAsync(
                 new SendPushNotificationNotification(notification.User.Id, "You are now online")
             );
-            await _mediator.PublishAsync(
+            await mediator.PublishAsync(
                 new TrackUserStatusChangeNotification(notification.User.Id, notification.NewStatus)
             );
         }

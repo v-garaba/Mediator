@@ -1,5 +1,6 @@
 ﻿using Mediators.Models;
 using Mediators.Repository;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Mediators.Messaging.Notifications;
@@ -7,12 +8,12 @@ namespace Mediators.Messaging.Notifications;
 public sealed record UpdateUserStatusNotification(UserRef UserId, UserStatus Status) : INotification;
 
 public sealed class UpdateUserStatusNotificationHandler(
-    IMediator _mediator,
+    IServiceProvider serviceProvider,
     ILogger<UpdateUserStatusNotificationHandler> logger,
     IStorage<UserRef, User> userRepository)
     : INotificationHandler<UpdateUserStatusNotification>
 {
-    private readonly IMediator _mediator = _mediator.AssertNotNull();
+    private readonly IServiceProvider _serviceProvider = serviceProvider.AssertNotNull();
     private readonly ILogger<UpdateUserStatusNotificationHandler> _logger = logger.AssertNotNull();
     private readonly IStorage<UserRef, User> _userRepository = userRepository.AssertNotNull();
 
@@ -28,11 +29,11 @@ public sealed class UpdateUserStatusNotificationHandler(
                 $"[USER MGMT] User {notification.UserId} status updated to {notification.Status}"
             );
 
-            await _mediator.PublishAsync(
+            // Lazy resolve mediator to avoid circular dependency
+            var mediator = _serviceProvider.GetRequiredService<IMediator>();
+
+            await mediator.PublishAsync(
                 new NotifyUserStatusChangeNotification(user, oldStatus, notification.Status)
-            );
-            await _mediator.PublishAsync(
-                new UpdateUserStatusNotification(notification.UserId, notification.Status)
             );
         }
     }
