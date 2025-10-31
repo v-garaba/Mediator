@@ -1,4 +1,4 @@
-namespace Mediators.Messaging.Requests;
+namespace Mediators.Handlers;
 
 public interface IRequest { }
 

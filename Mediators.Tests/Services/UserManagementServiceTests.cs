@@ -1,6 +1,6 @@
+using Mediators.Handlers;
 using Mediators.Messaging;
 using Mediators.Messaging.Notifications;
-using Mediators.Messaging.Requests;
 using Mediators.Models;
 using Mediators.Services;
 using Microsoft.Extensions.Logging;
@@ -29,8 +29,8 @@ public class UserManagementServiceTests
         var user = new User(userRef, "Alice", "alice@example.com", DateTimeOffset.UtcNow, UserStatus.Offline);
 
         // Act
-        await _mediator.Publish(new RegisterUserNotification(user));
-        var retrievedUserResponse = await _mediator.Send(new GetUserRequest(userRef));
+        await _mediator.PublishAsync(new RegisterUserNotification(user));
+        var retrievedUserResponse = await _mediator.SendRequestAsync(new GetUserRequest(userRef));
 
         // Assert
         Assert.That(retrievedUserResponse.User, Is.Not.Null);
@@ -42,7 +42,7 @@ public class UserManagementServiceTests
     {
         // Arrange & Act
         var nonExistent = new UserRef();
-        var userResp = await _mediator.Send(new GetUserRequest(nonExistent));
+        var userResp = await _mediator.SendRequestAsync(new GetUserRequest(nonExistent));
 
         // Assert
         Assert.That(userResp.User, Is.Null);
@@ -54,15 +54,15 @@ public class UserManagementServiceTests
         // Arrange
         var userRef = new UserRef();
         var user = new User(userRef, "Alice", "alice@example.com", DateTimeOffset.UtcNow, UserStatus.Offline);
-        await _mediator.Publish(new RegisterUserNotification(user));
+        await _mediator.PublishAsync(new RegisterUserNotification(user));
 
         var originalTime = user.LastActiveTime;
 
         Thread.Sleep(10); // Small delay to ensure time difference
 
         // Act
-        await _mediator.Publish(new UpdateUserActivityNotification(userRef));
-        var updatedUserResp = await _mediator.Send(new GetUserRequest(userRef));
+        await _mediator.PublishAsync(new UpdateUserActivityNotification(userRef));
+        var updatedUserResp = await _mediator.SendRequestAsync(new GetUserRequest(userRef));
 
         // Assert
         Assert.That(updatedUserResp.User, Is.Not.Null);
@@ -75,11 +75,11 @@ public class UserManagementServiceTests
         // Arrange
         var userRef = new UserRef();
         var user = new User(userRef, "Alice", "alice@example.com", DateTimeOffset.UtcNow, UserStatus.Offline);
-        await _mediator.Publish(new RegisterUserNotification(user));
+        await _mediator.PublishAsync(new RegisterUserNotification(user));
 
         // Act
-        await _mediator.Publish(new UpdateUserStatusNotification(userRef, UserStatus.Online));
-        var updatedUserResp = await _mediator.Send(new GetUserRequest(userRef));
+        await _mediator.PublishAsync(new UpdateUserStatusNotification(userRef, UserStatus.Online));
+        var updatedUserResp = await _mediator.SendRequestAsync(new GetUserRequest(userRef));
 
         // Assert
         Assert.That(updatedUserResp.User, Is.Not.Null);

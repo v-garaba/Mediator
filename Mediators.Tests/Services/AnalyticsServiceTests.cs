@@ -1,7 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using Mediators.Handlers;
 using Mediators.Messaging;
 using Mediators.Messaging.Notifications;
-using Mediators.Messaging.Requests;
 using Mediators.Models;
 using Mediators.Services;
 using Microsoft.Extensions.Logging;
@@ -37,12 +36,12 @@ public class AnalyticsServiceTests
         });
 
         // Act
-        await _mediator.Publish(new TrackMessageNotification(userId1, new MessageRef()));
-        await _mediator.Publish(new TrackMessageNotification(userId1, new MessageRef()));
-        await _mediator.Publish(new TrackMessageNotification(userId2, new MessageRef()));
+        await _mediator.PublishAsync(new TrackMessageNotification(userId1, new MessageRef()));
+        await _mediator.PublishAsync(new TrackMessageNotification(userId1, new MessageRef()));
+        await _mediator.PublishAsync(new TrackMessageNotification(userId2, new MessageRef()));
 
-        var resp1 = await _mediator.Send(new GetMessageCountRequest(userId1));
-        var resp2 = await _mediator.Send(new GetMessageCountRequest(userId2));
+        var resp1 = await _mediator.SendRequestAsync(new GetMessageCountRequest(userId1));
+        var resp2 = await _mediator.SendRequestAsync(new GetMessageCountRequest(userId2));
 
         // Assert
         Assert.That(trackedMessages.Count, Is.EqualTo(3));
@@ -55,7 +54,7 @@ public class AnalyticsServiceTests
     {
         // Arrange & Act
         var userId = new UserRef();
-        var resp = await _mediator.Send(new GetMessageCountRequest(userId));
+        var resp = await _mediator.SendRequestAsync(new GetMessageCountRequest(userId));
 
         // Assert
         Assert.That(resp.Count, Is.EqualTo(0));

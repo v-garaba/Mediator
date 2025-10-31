@@ -1,9 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using Mediators.Handlers;
 using Mediators.Messaging;
 using Mediators.Messaging.Notifications;
-using Mediators.Messaging.Requests;
 using Mediators.Models;
-using Mediators.Services;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
@@ -30,8 +28,8 @@ public class MessageStorageServiceTests
         var message = new ChatMessage(user1, "Test message", MessageType.Public);
 
         // Act
-        await _mediator.Publish(new StoreMessageNotification(message));
-        var response = await _mediator.Send(new GetAllMessagesRequest());
+        await _mediator.PublishAsync(new StoreMessageNotification(message));
+        var response = await _mediator.SendRequestAsync(new GetAllMessagesRequest());
 
         // Assert
         Assert.That(response.Messages, Has.Count.EqualTo(1));
@@ -42,7 +40,7 @@ public class MessageStorageServiceTests
     public async Task GetAllMessages_InitiallyEmpty()
     {
         // Arrange & Act
-        var response = await _mediator.Send(new GetAllMessagesRequest());
+        var response = await _mediator.SendRequestAsync(new GetAllMessagesRequest());
 
         // Assert
         Assert.That(response.Messages, Is.Empty);
@@ -63,12 +61,12 @@ public class MessageStorageServiceTests
             MessageType.Public
         );
 
-        await _mediator.Publish(new StoreMessageNotification(user1Message));
-        await _mediator.Publish(new StoreMessageNotification(user2Message));
-        await _mediator.Publish(new StoreMessageNotification(anotherUser1Message));
+        await _mediator.PublishAsync(new StoreMessageNotification(user1Message));
+        await _mediator.PublishAsync(new StoreMessageNotification(user2Message));
+        await _mediator.PublishAsync(new StoreMessageNotification(anotherUser1Message));
 
         // Act
-        var response1 = await _mediator.Send(new GetMessagesByUserRequest(user1));
+        var response1 = await _mediator.SendRequestAsync(new GetMessagesByUserRequest(user1));
 
         // Assert
         Assert.That(response1.Messages, Has.Count.EqualTo(2));
@@ -85,11 +83,11 @@ public class MessageStorageServiceTests
         var message3 = new ChatMessage(user1, "Third", MessageType.Public);
 
         // Act
-        await _mediator.Publish(new StoreMessageNotification(message1));
-        await _mediator.Publish(new StoreMessageNotification(message2));
-        await _mediator.Publish(new StoreMessageNotification(message3));
+        await _mediator.PublishAsync(new StoreMessageNotification(message1));
+        await _mediator.PublishAsync(new StoreMessageNotification(message2));
+        await _mediator.PublishAsync(new StoreMessageNotification(message3));
 
-        var response = await _mediator.Send(new GetAllMessagesRequest());
+        var response = await _mediator.SendRequestAsync(new GetAllMessagesRequest());
 
         // Assert
         Assert.That(response.Messages, Has.Count.EqualTo(3));
