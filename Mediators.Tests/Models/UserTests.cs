@@ -1,7 +1,6 @@
-using Mediators.Models;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
-namespace Mediators.Tests.Models;
+namespace Mediators.Models.Tests;
 
 public class UserTests
 {
@@ -9,10 +8,17 @@ public class UserTests
     public void User_Creation_ShouldInitializeWithCorrectValues()
     {
         // Arrange & Act
-        var user = new User("1", "Alice", "alice@example.com", DateTime.MinValue, UserStatus.Offline);
+        var userRef = new UserRef();
+        var user = new User(
+            userRef,
+            "Alice",
+            "alice@example.com",
+            DateTimeOffset.Now,
+            UserStatus.Offline
+        );
 
         // Assert
-        Assert.That(user.Id, Is.EqualTo("1"));
+        Assert.That(user.Id, Is.EqualTo(userRef));
         Assert.That(user.Name, Is.EqualTo("Alice"));
         Assert.That(user.Email, Is.EqualTo("alice@example.com"));
         Assert.That(user.Status, Is.EqualTo(UserStatus.Offline));
@@ -22,10 +28,20 @@ public class UserTests
     public void User_StatusChange_ShouldUpdateCorrectly()
     {
         // Arrange
-        var user = new User("1", "Alice", "alice@example.com", DateTime.MinValue, UserStatus.Offline);
+        var userRef = new UserRef();
+        var user = new User(
+            userRef,
+            "Alice",
+            "alice@example.com",
+            DateTimeOffset.Now,
+            UserStatus.Offline
+        );
 
         // Act
-        user = user with { Status = UserStatus.Online };
+        user = user with
+        {
+            Status = UserStatus.Online,
+        };
 
         // Assert
         Assert.That(user.Status, Is.EqualTo(UserStatus.Online));
@@ -35,11 +51,21 @@ public class UserTests
     public void User_LastActiveTime_CanBeUpdated()
     {
         // Arrange
-        var user = new User("1", "Alice", "alice@example.com", DateTime.MinValue, UserStatus.Offline);
-        var newTime = DateTime.UtcNow.AddHours(-1);
+        var userRef = new UserRef();
+        var user = new User(
+            userRef,
+            "Alice",
+            "alice@example.com",
+            DateTimeOffset.Now,
+            UserStatus.Offline
+        );
+        var newTime = DateTimeOffset.UtcNow.AddHours(-1);
 
         // Act
-        user = user with { LastActiveTime = newTime };
+        user = user with
+        {
+            LastActiveTime = newTime,
+        };
 
         // Assert
         Assert.That(user.LastActiveTime, Is.EqualTo(newTime));
