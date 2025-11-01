@@ -1,6 +1,6 @@
-﻿using Mediators.Messaging;
-using Mediators.Messaging.Notifications;
+﻿using Mediators.Mediators;
 using Mediators.Models;
+using Mediators.NotificationHandlers;
 using Microsoft.Extensions.Logging;
 
 namespace Mediators.Clients;

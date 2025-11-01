@@ -1,9 +1,9 @@
 ﻿using Mediators.Clients;
-using Mediators.Handlers;
-using Mediators.Messaging;
-using Mediators.Messaging.Notifications;
+using Mediators.Mediators;
 using Mediators.Models;
+using Mediators.NotificationHandlers;
 using Mediators.Repository;
+using Mediators.RequestHandlers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
