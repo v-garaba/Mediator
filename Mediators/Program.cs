@@ -3,7 +3,9 @@ using Mediators.Mediators;
 using Mediators.Models;
 using Mediators.NotificationHandlers;
 using Mediators.Repository;
+using Mediators.Repository.EntityFramework;
 using Mediators.RequestHandlers;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -13,15 +15,33 @@ class Program
 {
     static async Task Main()
     {
+        // Build configuration
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .Build();
+
+        var useInMemoryDb = configuration.GetValue<bool>("UseInMemoryDatabase");
+        var connectionString = configuration.GetConnectionString("ChatDatabase")
+            ?? throw new InvalidOperationException("ChatDatabase connection string is not configured");
+
         // Setup dependency injection
         var serviceProvider = new ServiceCollection()
             .AddLogging(configure => configure.AddConsole().SetMinimumLevel(LogLevel.Information))
-            .RegisterRepositories()
+            .RegisterRepositories() // Register other repositories (User, UserNotification, etc.)
             .RegisterRequestHandlers()
             .RegisterNotificationHandlers()
             .AddSingleton<IMediator, ChatMediator>()
             .AddSingleton<ChatRoom>()
+            // Register Entity Framework storage for ChatMessage
+            .AddEntityFrameworkStorage(useInMemoryDb, connectionString)
             .BuildServiceProvider();
+
+        // Ensure database is created
+        if (!useInMemoryDb)
+        {
+            await serviceProvider.EnsureDatabaseCreatedAsync().ConfigureAwait(false);
+        }
 
         var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
         var chatRoom = serviceProvider.GetRequiredService<ChatRoom>();
