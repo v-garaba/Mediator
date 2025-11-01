@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace Mediators.NotificationHandlers.Tests;
 
 [TestFixture]
-internal sealed class GetMessageCountHandlerTests
+internal sealed class TrackMessageNotificationHandlerTests
 {
     [Test]
     public async Task TrackMessageNotification_IncreasesCount()
