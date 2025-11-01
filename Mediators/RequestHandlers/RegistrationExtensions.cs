@@ -10,7 +10,7 @@ public static class RegistrationExtensions
             .AddTransient<IRequestHandler, GetAllMessagesHandler>()
             .AddTransient<IRequestHandler, GetMessagesByUserHandler>()
             .AddTransient<IRequestHandler, GetMessageCountHandler>()
-            .AddTransient<IRequestHandler, GetUserResponseHandler>();
+            .AddTransient<IRequestHandler, GetUserHandler>();
 
         return services;
     }

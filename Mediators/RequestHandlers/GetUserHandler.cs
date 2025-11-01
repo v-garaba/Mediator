@@ -7,7 +7,7 @@ public sealed record GetUserRequest(UserRef UserId) : IRequest<GetUserResponse>;
 
 public sealed record GetUserResponse(User? User);
 
-public sealed class GetUserResponseHandler(IStorage<UserRef, User> userStorage)
+public sealed class GetUserHandler(IStorage<UserRef, User> userStorage)
     : IRequestHandler<GetUserRequest, GetUserResponse>
 {
     private readonly IStorage<UserRef, User> _userStorage = userStorage;
