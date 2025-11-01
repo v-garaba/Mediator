@@ -30,7 +30,7 @@ internal sealed class UpdateUserStatusNotificationHandlerTests
         INotificationHandler<NotifyUserStatusChangeNotification> mockedNotifyHandler =
             new MockedNotifyHandler();
 
-        var serviceProvider = new ServiceCollection()
+        using var serviceProvider = new ServiceCollection()
             .AddLogging(builder => builder.SetMinimumLevel(LogLevel.None))
             .AddSingleton<IStorage<UserRef, User>>(userRepository)
             .AddSingleton<INotificationHandler, UpdateUserStatusNotificationHandler>()

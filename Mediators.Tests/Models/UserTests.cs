@@ -1,7 +1,6 @@
-﻿using Mediators.Models;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
-namespace Mediators.Tests.Models;
+namespace Mediators.Models.Tests;
 
 public class UserTests
 {
