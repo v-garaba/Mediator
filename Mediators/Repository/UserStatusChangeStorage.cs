@@ -1,4 +1,3 @@
-using Mediators.Data;
 using Mediators.Models;
 
 namespace Mediators.Repository;

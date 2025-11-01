@@ -15,13 +15,11 @@ public sealed record SendMessageNotification(
 
 public sealed class SendMessageNotificationHandler(
     IServiceProvider serviceProvider,
-    IStorage<UserRef, User> userStorage,
     IStorage<MessageRef, ChatMessage> messageStorage,
     ILogger<SendMessageNotificationHandler> logger
 ) : INotificationHandler<SendMessageNotification>
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider.AssertNotNull();
-    private readonly IStorage<UserRef, User> _userStorage = userStorage.AssertNotNull();
     private readonly IStorage<MessageRef, ChatMessage> _messageStorage =
         messageStorage.AssertNotNull();
     private readonly ILogger<SendMessageNotificationHandler> _logger = logger.AssertNotNull();

@@ -3,7 +3,6 @@ using Mediators.Repository;
 
 namespace Mediators.RequestHandlers;
 
-
 public sealed record GetMessageCountRequest(UserRef UserId) : IRequest<GetMessageCountResponse>;
 
 public sealed record GetMessageCountResponse(int Count);
