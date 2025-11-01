@@ -14,7 +14,8 @@ public class MockConfiguration(Dictionary<string, string> data) : IConfiguration
         new(
             new Dictionary<string, string>
             {
-                ["ConnectionStrings:ChatDatabase"] = "Server=TestServer_DoNotUse",
+                ["ConnectionStrings:ChatDatabase"] =
+                    $"Server=TestServer_{Guid.NewGuid()};Database=ChatDb;Trusted_Connection=True;TrustServerCertificate=True",
                 ["UseInMemoryDatabase"] = true.ToString(),
             }
         );
