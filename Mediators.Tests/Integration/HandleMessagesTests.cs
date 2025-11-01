@@ -3,6 +3,7 @@ using Mediators.Mediators;
 using Mediators.Models;
 using Mediators.NotificationHandlers;
 using Mediators.Repository;
+using Mediators.Repository.EntityFramework;
 using Mediators.RequestHandlers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -22,14 +23,22 @@ internal sealed class HandleMessagesTests
     {
         _serviceProvider = new ServiceCollection()
             .AddLogging(configure => configure.AddConsole().SetMinimumLevel(LogLevel.Information))
-            .RegisterRepositories()
+            .RegisterRepositories(Mocks.MockConfiguration.Default)
+            .AddInMemoryEntityFrameworkStorage($"TestDb_{Guid.NewGuid()}") // Unique in-memory DB per test
             .RegisterRequestHandlers()
             .RegisterNotificationHandlers()
             .AddSingleton<IMediator, ChatMediator>()
             .AddSingleton<ChatRoom>()
+            .AddEntityFrameworkStorage(true, "InMemoryDb")
             .BuildServiceProvider();
 
         _chatRoom = _serviceProvider.GetRequiredService<ChatRoom>();
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        _serviceProvider.Dispose();
     }
 
     [Test]

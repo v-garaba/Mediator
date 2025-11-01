@@ -22,19 +22,15 @@ class Program
             .Build();
 
         var useInMemoryDb = configuration.GetValue<bool>("UseInMemoryDatabase");
-        var connectionString = configuration.GetConnectionString("ChatDatabase")
-            ?? throw new InvalidOperationException("ChatDatabase connection string is not configured");
 
         // Setup dependency injection
         var serviceProvider = new ServiceCollection()
             .AddLogging(configure => configure.AddConsole().SetMinimumLevel(LogLevel.Information))
-            .RegisterRepositories() // Register other repositories (User, UserNotification, etc.)
+            .RegisterRepositories(configuration) // Register other repositories (User, UserNotification, etc.)
             .RegisterRequestHandlers()
             .RegisterNotificationHandlers()
             .AddSingleton<IMediator, ChatMediator>()
             .AddSingleton<ChatRoom>()
-            // Register Entity Framework storage for ChatMessage
-            .AddEntityFrameworkStorage(useInMemoryDb, connectionString)
             .BuildServiceProvider();
 
         // Ensure database is created
