@@ -7,8 +7,8 @@ public sealed record SendPushNotificationNotification(UserRef UserId, string Mes
     : INotification;
 
 public sealed class SendPushNotificationNotificationHandler(
-    ILogger<SendPushNotificationNotificationHandler> logger
-) : INotificationHandler<SendPushNotificationNotification>
+    ILogger<SendPushNotificationNotificationHandler> logger)
+    : INotificationHandler<SendPushNotificationNotification>
 {
     private readonly ILogger<SendPushNotificationNotificationHandler> _logger =
         logger.AssertNotNull();
