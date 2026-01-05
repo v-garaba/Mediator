@@ -1,4 +1,5 @@
 using Mediators.Models;
+using System.Collections.Immutable;
 
 namespace Mediators.Repository;
 
@@ -20,7 +21,7 @@ public sealed class UserStatusChangeStorage : IStorage<UserRef, UserStatusChange
         _storage[model.UserId] = model.AssertNotNull();
     }
 
-    public async Task<IReadOnlyList<UserStatusChange>> GetAllAsync(CancellationToken ct = default)
+    public async Task<ImmutableArray<UserStatusChange>> GetAllAsync(CancellationToken ct = default)
     {
         await Task.Yield();
         return [.. _storage.Values];

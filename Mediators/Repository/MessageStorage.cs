@@ -1,4 +1,5 @@
 using Mediators.Models;
+using System.Collections.Immutable;
 
 namespace Mediators.Repository;
 
@@ -20,7 +21,7 @@ public sealed class MessageStorage : IStorage<MessageRef, ChatMessage>
         _storage[model.Id] = model.AssertNotNull();
     }
 
-    public async Task<IReadOnlyList<ChatMessage>> GetAllAsync(CancellationToken ct = default)
+    public async Task<ImmutableArray<ChatMessage>> GetAllAsync(CancellationToken ct = default)
     {
         await Task.Yield();
         return [.. _storage.Values];

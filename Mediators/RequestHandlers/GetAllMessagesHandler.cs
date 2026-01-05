@@ -1,11 +1,12 @@
 using Mediators.Models;
 using Mediators.Repository;
+using System.Collections.Immutable;
 
 namespace Mediators.RequestHandlers;
 
 public sealed record GetAllMessagesRequest() : IRequest<GetAllMessagesResponse>;
 
-public sealed record GetAllMessagesResponse(IReadOnlyList<ChatMessage> Messages);
+public sealed record GetAllMessagesResponse(ImmutableArray<ChatMessage> Messages);
 
 public sealed class GetAllMessagesHandler(IStorage<MessageRef, ChatMessage> messageStorage)
     : IRequestHandler<GetAllMessagesRequest, GetAllMessagesResponse>

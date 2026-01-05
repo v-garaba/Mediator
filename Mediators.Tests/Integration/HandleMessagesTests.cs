@@ -50,7 +50,7 @@ internal sealed class HandleMessagesTests
         IStorage<MessageRef, ChatMessage> _messageStorage = _serviceProvider.GetRequiredService<IStorage<MessageRef, ChatMessage>>();
         var messagesResp = await _messageStorage.GetAllAsync();
 
-        Assert.That(messagesResp.Count, Is.EqualTo(1));
+        Assert.That(messagesResp, Has.Length.EqualTo(1));
         Assert.That(messagesResp[0].SenderId, Is.EqualTo(_userId));
         Assert.That(messagesResp[0].Content, Is.EqualTo("Some content"));
         Assert.That(messagesResp[0].Type, Is.EqualTo(MessageType.Public));
