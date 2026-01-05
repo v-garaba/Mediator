@@ -11,12 +11,12 @@ public sealed record NotifyUserOfMessageNotification(User User, ChatMessage Mess
 public sealed class NotifyUserOfMessageNotificationHandler(
     IServiceProvider serviceProvider,
     ILogger<NotifyUserOfMessageNotificationHandler> logger)
-    : INotificationHandler<NotifyUserOfMessageNotification>
+    : AbstractNotificationHandler<NotifyUserOfMessageNotification>
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider.AssertNotNull();
     private readonly ILogger<NotifyUserOfMessageNotificationHandler> _logger = logger.AssertNotNull();
 
-    public async Task HandleAsync(NotifyUserOfMessageNotification notification)
+    public sealed override async Task HandleAsync(NotifyUserOfMessageNotification notification)
     {
         _logger.LogInformation($"Notifying user {notification.User.Name} of new message");
 

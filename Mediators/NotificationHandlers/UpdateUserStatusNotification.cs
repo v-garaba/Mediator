@@ -13,13 +13,13 @@ public sealed class UpdateUserStatusNotificationHandler(
     IServiceProvider serviceProvider,
     ILogger<UpdateUserStatusNotificationHandler> logger,
     IStorage<UserRef, User> userRepository
-) : INotificationHandler<UpdateUserStatusNotification>
+) : AbstractNotificationHandler<UpdateUserStatusNotification>
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider.AssertNotNull();
     private readonly ILogger<UpdateUserStatusNotificationHandler> _logger = logger.AssertNotNull();
     private readonly IStorage<UserRef, User> _userRepository = userRepository.AssertNotNull();
 
-    public async Task HandleAsync(UpdateUserStatusNotification notification)
+    public sealed override async Task HandleAsync(UpdateUserStatusNotification notification)
     {
         var user = await _userRepository.TryGetAsync(notification.UserId);
         if (user != null)

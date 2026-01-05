@@ -17,14 +17,14 @@ public sealed class SendMessageNotificationHandler(
     IServiceProvider serviceProvider,
     IStorage<MessageRef, ChatMessage> messageStorage,
     ILogger<SendMessageNotificationHandler> logger
-) : INotificationHandler<SendMessageNotification>
+) : AbstractNotificationHandler<SendMessageNotification>
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider.AssertNotNull();
     private readonly IStorage<MessageRef, ChatMessage> _messageStorage =
         messageStorage.AssertNotNull();
     private readonly ILogger<SendMessageNotificationHandler> _logger = logger.AssertNotNull();
 
-    public async Task HandleAsync(SendMessageNotification notification)
+    public sealed override async Task HandleAsync(SendMessageNotification notification)
     {
         var message = new ChatMessage(
             notification.SenderId,

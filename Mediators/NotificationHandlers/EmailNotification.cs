@@ -7,11 +7,11 @@ namespace Mediators.NotificationHandlers;
 /// </summary>
 public sealed record EmailNotification(string To, string Subject, string Body) : INotification;
 
-public sealed class EmailNotificationHandler(ILogger<EmailNotificationHandler> logger) : INotificationHandler<EmailNotification>
+public sealed class EmailNotificationHandler(ILogger<EmailNotificationHandler> logger) : AbstractNotificationHandler<EmailNotification>
 {
     private readonly ILogger<EmailNotificationHandler> _logger = logger.AssertNotNull();
 
-    public async Task HandleAsync(EmailNotification notification)
+    public sealed override async Task HandleAsync(EmailNotification notification)
     {
         await Task.Yield();
         

@@ -10,14 +10,14 @@ public sealed record TrackUserStatusChangeNotification(UserRef UserId, UserStatu
 public sealed class TrackUserStatusChangeNotificationHandler(
     ILogger<TrackUserStatusChangeNotificationHandler> logger,
     IStorage<UserRef, UserStatusChange> userStatusChangeStorage
-) : INotificationHandler<TrackUserStatusChangeNotification>
+) : AbstractNotificationHandler<TrackUserStatusChangeNotification>
 {
     private readonly ILogger<TrackUserStatusChangeNotificationHandler> _logger =
         logger.AssertNotNull();
     private readonly IStorage<UserRef, UserStatusChange> _userStatusChangeStorage =
         userStatusChangeStorage.AssertNotNull();
 
-    public async Task HandleAsync(TrackUserStatusChangeNotification notification)
+    public sealed override async Task HandleAsync(TrackUserStatusChangeNotification notification)
     {
         await Task.Yield();
         notification.AssertNotNull();

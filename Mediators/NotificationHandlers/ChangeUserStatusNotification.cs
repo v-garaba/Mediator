@@ -9,12 +9,12 @@ public sealed record ChangeUserStatusNotification(UserRef UserId, UserStatus New
 public sealed class ChangeUserStatusNotificationHandler(
     ILogger<ChangeUserStatusNotificationHandler> logger,
     IStorage<UserRef, User> userRepository)
-    : INotificationHandler<ChangeUserStatusNotification>
+    : AbstractNotificationHandler<ChangeUserStatusNotification>
 {
     private readonly ILogger<ChangeUserStatusNotificationHandler> _logger = logger.AssertNotNull();
     private readonly IStorage<UserRef, User> _userRepository = userRepository.AssertNotNull();
 
-    public async Task HandleAsync(ChangeUserStatusNotification notification)
+    public sealed override async Task HandleAsync(ChangeUserStatusNotification notification)
     {
         var user = await _userRepository.TryGetAsync(notification.UserId);
         if (user != null)

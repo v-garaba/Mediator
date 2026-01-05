@@ -8,11 +8,11 @@ public sealed record TrackMessageSentNotification(UserRef UserId, string Message
 
 public sealed class TrackMessageSentNotificationHandler(
     ILogger<TrackMessageSentNotificationHandler> logger
-) : INotificationHandler<TrackMessageSentNotification>
+) : AbstractNotificationHandler<TrackMessageSentNotification>
 {
     private readonly ILogger<TrackMessageSentNotificationHandler> _logger = logger.AssertNotNull();
 
-    public async Task HandleAsync(TrackMessageSentNotification notification)
+    public sealed override async Task HandleAsync(TrackMessageSentNotification notification)
     {
         await Task.Yield();
         notification.AssertNotNull();

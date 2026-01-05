@@ -9,10 +9,11 @@ public interface IMediator
     /// Sends a request to the appropriate handler and returns the response.
     /// </summary>
     Task<TResponse> SendRequestAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
-        where TResponse : class;
+        where TResponse : notnull;
 
     /// <summary>
     /// Publishes a notification to all appropriate handlers.
     /// </summary>
-    Task PublishAsync(INotification notification);
+    Task PublishAsync<TNotification>(TNotification notification)
+        where TNotification : INotification;
 }

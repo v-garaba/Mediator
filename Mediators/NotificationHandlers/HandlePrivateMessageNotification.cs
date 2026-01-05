@@ -13,12 +13,12 @@ public sealed record HandlePrivateMessageNotification(
 public sealed class HandlePrivateMessageNotificationHandler(
     IServiceProvider serviceProvider,
     IStorage<UserRef, User> userStorage)
-    : INotificationHandler<HandlePrivateMessageNotification>
+    : AbstractNotificationHandler<HandlePrivateMessageNotification>
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider.AssertNotNull();
     private readonly IStorage<UserRef, User> _userStorage = userStorage.AssertNotNull();
 
-    public async Task HandleAsync(HandlePrivateMessageNotification notification)
+    public sealed override async Task HandleAsync(HandlePrivateMessageNotification notification)
     {
         if (notification.Message.Type != MessageType.Private)
         {

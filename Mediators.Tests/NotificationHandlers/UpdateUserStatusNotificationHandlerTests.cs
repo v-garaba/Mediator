@@ -57,11 +57,11 @@ internal sealed class UpdateUserStatusNotificationHandlerTests
     }
 
     private sealed class MockedNotifyHandler()
-        : INotificationHandler<NotifyUserStatusChangeNotification>
+        : AbstractNotificationHandler<NotifyUserStatusChangeNotification>
     {
         public readonly List<NotifyUserStatusChangeNotification> ReceivedNotifications = new();
 
-        public Task HandleAsync(NotifyUserStatusChangeNotification notification)
+        public sealed override Task HandleAsync(NotifyUserStatusChangeNotification notification)
         {
             ReceivedNotifications.Add(notification);
             return Task.CompletedTask;

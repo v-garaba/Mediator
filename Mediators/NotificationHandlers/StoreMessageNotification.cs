@@ -9,12 +9,12 @@ public sealed record StoreMessageNotification(ChatMessage Message) : INotificati
 public sealed class StoreMessageNotificationHandler(
     IStorage<MessageRef, ChatMessage> messageStorage,
     ILogger<StoreMessageNotificationHandler> logger
-) : INotificationHandler<StoreMessageNotification>
+) : AbstractNotificationHandler<StoreMessageNotification>
 {
     private readonly IStorage<MessageRef, ChatMessage> _messageStorage = messageStorage;
     private readonly ILogger<StoreMessageNotificationHandler> _logger = logger;
 
-    public async Task HandleAsync(StoreMessageNotification notification)
+    public sealed override async Task HandleAsync(StoreMessageNotification notification)
     {
         await _messageStorage.SetAsync(notification.Message).ConfigureAwait(false);
         _logger.LogInformation($"[STORAGE] Message {notification.Message.Id} stored");

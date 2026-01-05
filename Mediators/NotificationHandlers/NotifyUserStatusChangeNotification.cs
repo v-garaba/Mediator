@@ -14,13 +14,13 @@ public sealed record NotifyUserStatusChangeNotification(
 public sealed class NotifyUserStatusChangeNotificationHandler(
     IServiceProvider serviceProvider,
     ILogger<NotifyUserStatusChangeNotificationHandler> logger
-) : INotificationHandler<NotifyUserStatusChangeNotification>
+) : AbstractNotificationHandler<NotifyUserStatusChangeNotification>
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider.AssertNotNull();
     private readonly ILogger<NotifyUserStatusChangeNotificationHandler> _logger =
         logger.AssertNotNull();
 
-    public async Task HandleAsync(NotifyUserStatusChangeNotification notification)
+    public sealed override async Task HandleAsync(NotifyUserStatusChangeNotification notification)
     {
         _logger.LogInformation(
             $"User {notification.User.Name} status changed from {notification.OldStatus} to {notification.NewStatus}"

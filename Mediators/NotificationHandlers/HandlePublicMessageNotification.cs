@@ -13,12 +13,12 @@ public sealed record HandlePublicMessageNotification(
 public sealed class HandlePublicMessageNotificationHandler(
     IServiceProvider serviceProvider,
     IStorage<UserRef, User> userStorage)
-    : INotificationHandler<HandlePublicMessageNotification>
+    : AbstractNotificationHandler<HandlePublicMessageNotification>
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider.AssertNotNull();
     private readonly IStorage<UserRef, User> _userStorage = userStorage.AssertNotNull();
 
-    public async Task HandleAsync(HandlePublicMessageNotification notification)
+    public sealed override async Task HandleAsync(HandlePublicMessageNotification notification)
     {
         if (notification.Message.Type != MessageType.Public)
         {

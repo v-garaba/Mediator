@@ -9,12 +9,12 @@ public sealed record UpdateUserActivityNotification(UserRef UserId) : INotificat
 public sealed class UpdateUserActivityNotificationHandler(
     ILogger<UpdateUserActivityNotificationHandler> logger,
     IStorage<UserRef, User> userRepository)
-    : INotificationHandler<UpdateUserActivityNotification>
+    : AbstractNotificationHandler<UpdateUserActivityNotification>
 {
     private readonly ILogger<UpdateUserActivityNotificationHandler> _logger = logger.AssertNotNull();
     private readonly IStorage<UserRef, User> _userRepository = userRepository.AssertNotNull();
 
-    public async Task HandleAsync(UpdateUserActivityNotification notification)
+    public sealed override async Task HandleAsync(UpdateUserActivityNotification notification)
     {
         var user = await _userRepository.TryGetAsync(notification.UserId);
         if (user != null)

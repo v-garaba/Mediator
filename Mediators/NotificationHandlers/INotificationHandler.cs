@@ -1,6 +1,10 @@
 namespace Mediators.NotificationHandlers;
 
-public interface INotificationHandler { }
+public interface INotificationHandler
+{
+    Type NotificationType { get; }
+}
+
 public interface INotificationHandler<TNotification> : INotificationHandler
     where TNotification : INotification
 {

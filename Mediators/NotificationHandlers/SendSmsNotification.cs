@@ -6,11 +6,11 @@ namespace Mediators.NotificationHandlers;
 public sealed record SendSmsNotification(UserRef UserId, string Message) : INotification;
 
 public sealed class SendSmsNotificationHandler(ILogger<SendSmsNotificationHandler> logger)
-    : INotificationHandler<SendSmsNotification>
+    : AbstractNotificationHandler<SendSmsNotification>
 {
     private readonly ILogger<SendSmsNotificationHandler> _logger = logger.AssertNotNull();
 
-    public async Task HandleAsync(SendSmsNotification notification)
+    public sealed override async Task HandleAsync(SendSmsNotification notification)
     {
         await Task.Yield();
 

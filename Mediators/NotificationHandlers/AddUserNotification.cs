@@ -13,13 +13,13 @@ public sealed class AddUserNotificationHandler(
     ILogger<AddUserNotificationHandler> logger,
     IServiceProvider serviceProvider,
     IStorage<UserRef, User> userStorage)
-    : INotificationHandler<AddUserNotification>
+    : AbstractNotificationHandler<AddUserNotification>
 {
     private readonly ILogger<AddUserNotificationHandler> _logger = logger.AssertNotNull();
     private readonly IServiceProvider _serviceProvider = serviceProvider.AssertNotNull();
     private readonly IStorage<UserRef, User> _userStorage = userStorage.AssertNotNull();
 
-    public async Task HandleAsync(AddUserNotification notification)
+    public sealed override async Task HandleAsync(AddUserNotification notification)
     {
         await _userStorage.SetAsync(notification.User).ConfigureAwait(false);
         _logger.LogInformation($"User {notification.User.Name} joined the chat room");

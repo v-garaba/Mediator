@@ -9,13 +9,13 @@ public sealed record TrackMessageNotification(UserRef UserId, MessageRef Message
 public sealed class TrackMessageNotificationHandler(
     ILogger<TrackMessageNotificationHandler> logger,
     IStorage<UserRef, UserNotification> userNotificationStorage
-) : INotificationHandler<TrackMessageNotification>
+) : AbstractNotificationHandler<TrackMessageNotification>
 {
     private readonly ILogger<TrackMessageNotificationHandler> _logger = logger.AssertNotNull();
     private readonly IStorage<UserRef, UserNotification> _userNotificationStorage =
         userNotificationStorage.AssertNotNull();
 
-    public async Task HandleAsync(TrackMessageNotification notification)
+    public sealed override async Task HandleAsync(TrackMessageNotification notification)
     {
         notification.AssertNotNull();
         var userNotification =

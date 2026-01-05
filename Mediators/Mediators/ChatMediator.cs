@@ -11,33 +11,28 @@ public sealed class ChatMediator(
     : IMediator
 {
     private readonly Lazy<FrozenDictionary<Type, IRequestHandler>> _requestHandlers = new Lazy<FrozenDictionary<Type, IRequestHandler>>(requestHandlers.ToFrozenDictionary(x => x.RequestType));
-    private readonly Lazy<INotificationHandler[]> _notificationHandlers = new(() => [.. notificationHandlers]);
+    private readonly Lazy<FrozenDictionary<Type, INotificationHandler>> _notificationHandlers = new Lazy<FrozenDictionary<Type, INotificationHandler>>(notificationHandlers.ToFrozenDictionary(x => x.NotificationType));
 
     #region INotificationObserver Implementation
-    public async Task PublishAsync(INotification notification)
+    public async Task PublishAsync<TNotification>(TNotification notification)
+        where TNotification : INotification
     {
         notification.AssertNotNull();
 
         // Find the handlers that can handle this specific notification type
         var notificationType = notification.GetType();
-        var handlerType = typeof(INotificationHandler<>).MakeGenericType(notificationType);
 
-        var notificationHandlers = _notificationHandlers.Value
-            .Where(h => handlerType.IsAssignableFrom(h.GetType()))
-            .ToImmutableArray();
-
-        foreach (var handler in notificationHandlers)
+        if (_notificationHandlers.Value.TryGetValue(notificationType, out INotificationHandler? handler))
         {
-            var handleMethod = handler.GetType().GetMethod("HandleAsync")
-            ?? throw new InvalidOperationException($"Handler {handler.GetType().FullName} does not have a HandleAsync method");
-
-            if (handleMethod.Invoke(handler, [notification]) is not Task task)
+            if (handler is INotificationHandler<TNotification> typedHandler)
             {
-                throw new InvalidOperationException($"Failed to invoke Handle method on handler {handler.GetType().FullName}");
+                await typedHandler.HandleAsync(notification).ConfigureAwait(false);
+                return;
             }
 
-            await task.ConfigureAwait(false);
         }
+
+        throw new InvalidOperationException($"Failed to locate a handler for notification : {notificationType.FullName}");
     }
 
     public void Subscribe<TNotification>(Func<TNotification, Task> handler) // TO DELETE
@@ -48,16 +43,16 @@ public sealed class ChatMediator(
 
     #region IRequestObserver Implementation
     public async Task<TResponse> SendRequestAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
-        where TResponse : class
+        where TResponse : notnull
     {
         request.AssertNotNull();
 
         // Find the handler that can handle this specific request type
         var requestType = request.GetType();
 
-        if (_requestHandlers.Value.TryGetValue(requestType, out var directHandler))
+        if (_requestHandlers.Value.TryGetValue(requestType, out var handler))
         {
-            if (directHandler is IRequestHandler<IRequest<TResponse>, TResponse> typedHandler)
+            if (handler is IRequestHandler<IRequest<TResponse>, TResponse> typedHandler)
             {
                 return await typedHandler.HandleAsync(request, cancellationToken).ConfigureAwait(false);
             }
