@@ -12,14 +12,12 @@ public sealed record AddUserNotification(User User) : INotification;
 public sealed class AddUserNotificationHandler(
     ILogger<AddUserNotificationHandler> logger,
     IServiceProvider serviceProvider,
-    IStorage<UserRef, User> userStorage,
-    IStorage<MessageRef, ChatMessage> messageStorage)
+    IStorage<UserRef, User> userStorage)
     : INotificationHandler<AddUserNotification>
 {
     private readonly ILogger<AddUserNotificationHandler> _logger = logger.AssertNotNull();
     private readonly IServiceProvider _serviceProvider = serviceProvider.AssertNotNull();
     private readonly IStorage<UserRef, User> _userStorage = userStorage.AssertNotNull();
-    private readonly IStorage<MessageRef, ChatMessage> _messageStorage = messageStorage.AssertNotNull();
 
     public async Task HandleAsync(AddUserNotification notification)
     {
@@ -37,7 +35,6 @@ public sealed class AddUserNotificationHandler(
             MessageType.System
         );
 
-        await _messageStorage.SetAsync(systemMessage);
         await mediator.PublishAsync(new StoreMessageNotification(systemMessage));
     }
 }
