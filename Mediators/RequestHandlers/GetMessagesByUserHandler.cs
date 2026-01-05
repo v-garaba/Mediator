@@ -9,11 +9,11 @@ public sealed record GetMessagesByUserRequest(UserRef UserId) : IRequest<GetMess
 public sealed record GetMessagesByUserResponse(ImmutableArray<ChatMessage> Messages);
 
 public sealed class GetMessagesByUserHandler(IStorage<MessageRef, ChatMessage> messageStorage)
-    : IRequestHandler<GetMessagesByUserRequest, GetMessagesByUserResponse>
+    : AbstractRequestHandler<GetMessagesByUserRequest, GetMessagesByUserResponse>
 {
     private readonly IStorage<MessageRef, ChatMessage> _messageStorage = messageStorage;
 
-    public async Task<GetMessagesByUserResponse> HandleAsync(GetMessagesByUserRequest request, CancellationToken cancellationToken)
+    public sealed override async Task<GetMessagesByUserResponse> HandleAsync(GetMessagesByUserRequest request, CancellationToken cancellationToken)
     {
         var allMessages = await _messageStorage.GetAllAsync(cancellationToken);
         var userMessages = allMessages.Where(msg => msg.SenderId == request.UserId).ToImmutableArray();

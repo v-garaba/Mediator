@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Collections.Immutable;
 using Mediators.NotificationHandlers;
 using Mediators.RequestHandlers;
@@ -9,7 +10,7 @@ public sealed class ChatMediator(
     IEnumerable<INotificationHandler> notificationHandlers)
     : IMediator
 {
-    private readonly Lazy<IRequestHandler[]> _requestHandlers = new(() => [.. requestHandlers]);
+    private readonly Lazy<FrozenDictionary<Type, IRequestHandler>> _requestHandlers = new Lazy<FrozenDictionary<Type, IRequestHandler>>(requestHandlers.ToFrozenDictionary(x => x.RequestType));
     private readonly Lazy<INotificationHandler[]> _notificationHandlers = new(() => [.. notificationHandlers]);
 
     #region INotificationObserver Implementation
@@ -53,39 +54,17 @@ public sealed class ChatMediator(
 
         // Find the handler that can handle this specific request type
         var requestType = request.GetType();
-        var handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
 
-        var requestHandlers = _requestHandlers.Value
-            .Where(h => handlerType.IsAssignableFrom(h.GetType()))
-            .ToImmutableArray();
-
-        if (requestHandlers.Length > 1)
+        if (_requestHandlers.Value.TryGetValue(requestType, out var directHandler))
         {
-            throw new InvalidOperationException(
-                $"Multiple handlers registered for request type {request.GetType().FullName}"
-            );
+            if (directHandler is IRequestHandler<IRequest<TResponse>, TResponse> typedHandler)
+            {
+                return await typedHandler.HandleAsync(request, cancellationToken).ConfigureAwait(false);
+            }
         }
 
-        if (requestHandlers.Length == 0)
-        {
-            throw new InvalidOperationException(
-                $"No handler registered for request type {request.GetType().FullName}"
-            );
-        }
-
-        // Use reflection to call the Handle method
-        var handler = requestHandlers[0];
-        var handleMethod = handler.GetType().GetMethod("HandleAsync")
-            ?? throw new InvalidOperationException($"Handler {handler.GetType().FullName} does not have a HandleAsync method");
-
-
-        if (handleMethod.Invoke(handler, [request, CancellationToken.None]) is not Task<TResponse> task)
-        {
-            throw new InvalidOperationException($"Failed to invoke HandleAsync method on handler {handler.GetType().FullName}");
-        }
-
-        var response = await task.ConfigureAwait(false);
-        return response;
+        throw new InvalidOperationException(
+                $"No handler registered for request type {request.GetType().FullName}");
     }
     #endregion
 }

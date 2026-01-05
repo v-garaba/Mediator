@@ -8,11 +8,11 @@ public sealed record GetMessageCountRequest(UserRef UserId) : IRequest<GetMessag
 public sealed record GetMessageCountResponse(int Count);
 
 public sealed class GetMessageCountHandler(IStorage<MessageRef, ChatMessage> messageStorage)
-    : IRequestHandler<GetMessageCountRequest, GetMessageCountResponse>
+    : AbstractRequestHandler<GetMessageCountRequest, GetMessageCountResponse>
 {
     private readonly IStorage<MessageRef, ChatMessage> _messageStorage = messageStorage;
 
-    public async Task<GetMessageCountResponse> HandleAsync(GetMessageCountRequest request, CancellationToken cancellationToken)
+    public sealed override async Task<GetMessageCountResponse> HandleAsync(GetMessageCountRequest request, CancellationToken cancellationToken)
     {
         var userMessageCount = await _messageStorage.CountAsync(cancellationToken);
         return new GetMessageCountResponse(userMessageCount);
