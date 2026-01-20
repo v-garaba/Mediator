@@ -1,16 +1,34 @@
 ﻿using Mediators.Mediators;
 using Mediators.Models;
 using Mediators.Repository;
+using Mediators.Repository.EntityFramework;
+using Mediators.Tests.Mocks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
-namespace Mediators.NotificationHandlers.Tests;
+namespace Mediators.Notifications.Tests;
 
 [TestFixture]
 internal sealed class UpdateUserStatusNotificationHandlerTests
 {
     private readonly UserRef _userRef = new();
+private ServiceProvider _serviceProvider = null!;
+
+    [SetUp]
+    public void SetUp()
+    {
+        _serviceProvider = new ServiceCollection()
+            .RegisterUserRepositories(MockConfiguration.Default)
+            .AddInMemoryEntityFrameworkStorage($"TestDb_{Guid.NewGuid()}") // Unique in-memory DB per test
+            .BuildServiceProvider();
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        _serviceProvider.Dispose();
+    }
 
     [Test]
     public async Task UpdateUserStatus_UpdatesUserStatus()
@@ -24,7 +42,7 @@ internal sealed class UpdateUserStatusNotificationHandlerTests
             UserStatus.Offline
         );
 
-        var userRepository = new UserStorage();
+        var userRepository = _serviceProvider.GetRequiredService<IStorage<UserRef, User>>();
         await userRepository.SetAsync(user);
 
         INotificationHandler<NotifyUserStatusChangeNotification> mockedNotifyHandler =
@@ -68,3 +86,5 @@ internal sealed class UpdateUserStatusNotificationHandlerTests
         }
     }
 }
+
+

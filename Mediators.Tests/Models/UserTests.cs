@@ -81,3 +81,5 @@ public class UserTests
         Assert.That(Enum.IsDefined(typeof(UserStatus), UserStatus.Busy), Is.True);
     }
 }
+
+

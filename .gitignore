@@ -75,6 +75,9 @@ artifacts/
 *.svclog
 *.scc
 
+# Environment files containing secrets. Ask developers for a copy
+.env
+
 # Chutzpah Test files
 _Chutzpah*
 
