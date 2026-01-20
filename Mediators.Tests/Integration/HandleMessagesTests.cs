@@ -1,9 +1,10 @@
-using Mediators.Clients;
 using Mediators.Mediators;
 using Mediators.Models;
-using Mediators.NotificationHandlers;
+using Mediators.Notifications;
 using Mediators.Repository;
+using Mediators.Repository.EntityFramework;
 using Mediators.RequestHandlers;
+using Mediators.Tests.Mocks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
@@ -14,7 +15,7 @@ namespace Mediators.Tests.Integration;
 internal sealed class HandleMessagesTests
 {
     private readonly UserRef _userId = new();
-    private ChatRoom _chatRoom = null!;
+    private MediatorBasedChatRoom _chatRoom = null!;
     private ServiceProvider _serviceProvider = null!;
 
     [SetUp]
@@ -22,14 +23,26 @@ internal sealed class HandleMessagesTests
     {
         _serviceProvider = new ServiceCollection()
             .AddLogging(configure => configure.AddConsole().SetMinimumLevel(LogLevel.Information))
-            .RegisterRepositories()
-            .RegisterRequestHandlers()
-            .RegisterNotificationHandlers()
+            // Register repositories (in-memory for users, EF for messages)
+            .RegisterUserRepositories(MockConfiguration.Default)
+            .AddInMemoryEntityFrameworkStorage($"TestDb_{Guid.NewGuid()}") // Unique in-memory DB per test
+            // Register handlers
+            .RegisterChatRequestHandlers()
+            .RegisterUserRequestHandlers()
+            .RegisterChatNotificationHandlers()
+            .RegisterUserNotificationHandlers()
+            // Register mediator
             .AddSingleton<IMediator, ChatMediator>()
-            .AddSingleton<ChatRoom>()
+            .AddSingleton<MediatorBasedChatRoom>()
             .BuildServiceProvider();
 
-        _chatRoom = _serviceProvider.GetRequiredService<ChatRoom>();
+        _chatRoom = _serviceProvider.GetRequiredService<MediatorBasedChatRoom>();
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        _serviceProvider.Dispose();
     }
 
     [Test]
@@ -70,6 +83,42 @@ internal sealed class HandleMessagesTests
         var updatedUser = await _userStorage.TryGetAsync(user.Id);
         Assert.That(updatedUser, Is.Not.Null);
         Assert.That(updatedUser!.LastActiveTime, Is.EqualTo(beforeSendTime).Within(TimeSpan.FromSeconds(1)));
+    }
+}
 
+/// <summary>
+/// A chat room that uses the mediator directly (not HTTP).
+/// Used for integration testing with Entity Framework.
+/// </summary>
+internal sealed class MediatorBasedChatRoom(IMediator mediator, ILogger<MediatorBasedChatRoom> logger)
+{
+    private readonly ILogger<MediatorBasedChatRoom> _logger = logger;
+    private readonly IMediator _mediator = mediator;
+
+    public async Task SendMessageAsync(
+        UserRef senderId,
+        string content,
+        MessageType type,
+        UserRef? targetUserId = null
+    )
+    {
+        _logger.LogInformation(
+            "[CHAT ROOM] User {UserId} is sending a {Kind} message",
+            senderId,
+            type == MessageType.Private ? "private" : "public"
+        );
+        await _mediator.PublishAsync(new SendMessageNotification(senderId, content, type, targetUserId));
+    }
+
+    public async Task AddUserAsync(User user)
+    {
+        _logger.LogInformation("[CHAT ROOM] User {User} is joining the chat room", user.Name);
+        await _mediator.PublishAsync(new AddUserNotification(user));
+    }
+
+    public async Task ChangeUserStatusAsync(UserRef userId, UserStatus newStatus)
+    {
+        _logger.LogInformation("[CHAT ROOM] User {UserId} is changing status to {Status}", userId, newStatus);
+        await _mediator.PublishAsync(new ChangeUserStatusNotification(userId, newStatus));
     }
 }

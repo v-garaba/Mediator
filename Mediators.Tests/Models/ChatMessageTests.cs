@@ -62,3 +62,5 @@ public class ChatMessageTests
         Assert.That(message.Timestamp, Is.InRange(beforeCreation, afterCreation));
     }
 }
+
+

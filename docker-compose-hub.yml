@@ -1,0 +1,60 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: ${SA_PASSWORD} # This must be present in .env file
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$SA_PASSWORD\" -C -Q 'SELECT 1' -b || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  mediator-chat:
+    image: vlgaraba/mediator-chat:latest
+    environment:
+      - ConnectionStrings__ChatDatabase=Server=sqlserver;Database=ChatDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True
+    ports:
+      - "61795:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  mediator-users:
+    image: vlgaraba/mediator-users:latest
+    environment:
+      - ConnectionStrings__UserDatabase=Server=sqlserver;Database=UserDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True
+    ports:
+      - "61796:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mediator-preview:
+    image: vlgaraba/mediator-preview:latest
+    environment:
+      - USER_API_BASE=http://mediator-users:8080
+      - CHAT_API_BASE=http://mediator-chat:8080
+    depends_on:
+      mediator-chat:
+        condition: service_healthy
+      mediator-users:
+        condition: service_healthy
+
+volumes:
+  sqlserver-data:
