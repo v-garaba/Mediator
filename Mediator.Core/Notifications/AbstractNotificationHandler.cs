@@ -1,4 +1,4 @@
-namespace Mediators.NotificationHandlers;
+namespace Mediators.Notifications;
 
 public abstract class AbstractNotificationHandler<TNotification> : INotificationHandler<TNotification>
     where TNotification : INotification

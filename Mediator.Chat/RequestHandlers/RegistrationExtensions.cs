@@ -2,7 +2,7 @@
 
 namespace Mediators.RequestHandlers;
 
-public static class ChatRegistrationExtensions
+public static class RegistrationExtensions
 {
     public static IServiceCollection RegisterChatRequestHandlers(this IServiceCollection services)
     {

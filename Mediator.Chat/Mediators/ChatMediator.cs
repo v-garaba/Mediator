@@ -1,5 +1,4 @@
 using System.Collections.Frozen;
-using System.Collections.Immutable;
 using Mediators.Notifications;
 using Mediators.RequestHandlers;
 
@@ -21,24 +20,23 @@ public sealed class ChatMediator(
 
         // Find the handlers that can handle this specific notification type
         var notificationType = notification.GetType();
-        var handlerType = typeof(INotificationHandler<>).MakeGenericType(notificationType);
 
-        var notificationHandlers = _notificationHandlers.Value
-            .Where(h => handlerType.IsAssignableFrom(h.GetType()))
-            .ToImmutableArray();
-
-        foreach (var handler in notificationHandlers)
+        if (_notificationHandlers.Value.TryGetValue(notificationType, out INotificationHandler? handler))
         {
-            var handleMethod = handler.GetType().GetMethod("HandleAsync")
-            ?? throw new InvalidOperationException($"Handler {handler.GetType().FullName} does not have a HandleAsync method");
-
-            if (handleMethod.Invoke(handler, [notification]) is not Task task)
+            if (handler is INotificationHandler<TNotification> typedHandler)
             {
-                throw new InvalidOperationException($"Failed to invoke Handle method on handler {handler.GetType().FullName}");
+                await typedHandler.HandleAsync(notification).ConfigureAwait(false);
+                return;
             }
 
-            await task.ConfigureAwait(false);
         }
+
+        throw new InvalidOperationException($"Failed to locate a handler for notification : {notificationType.FullName}");
+    }
+
+    public void Subscribe<TNotification>(Func<TNotification, Task> handler) // TO DELETE
+        where TNotification : INotification
+    {
     }
     #endregion
 
@@ -53,9 +51,16 @@ public sealed class ChatMediator(
 
         if (_requestHandlers.Value.TryGetValue(requestType, out var handler))
         {
-            if (handler is IRequestHandler<IRequest<TResponse>, TResponse> typedHandler)
+            // Use reflection to invoke HandleAsync since generic variance prevents direct casting
+            var handleMethod = handler.GetType().GetMethod(nameof(IRequestHandler<IRequest<TResponse>, TResponse>.HandleAsync));
+            if (handleMethod is not null)
             {
-                return await typedHandler.HandleAsync(request, cancellationToken).ConfigureAwait(false);
+                var task = (Task)handleMethod.Invoke(handler, [request, cancellationToken])!;
+                await task.ConfigureAwait(false);
+                
+                // Get the Result property from Task<TResponse>
+                var resultProperty = task.GetType().GetProperty(nameof(Task<TResponse>.Result))!;
+                return (TResponse)resultProperty.GetValue(task)!;
             }
         }
 

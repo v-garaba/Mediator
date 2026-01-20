@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Mediators.Data;
 using Mediators.Models;
 using Mediators.Repository.EntityFramework.Entities;
@@ -79,7 +80,7 @@ public sealed class EntityFrameworkUserStorage : IStorage<UserRef, User>
         await _context.SaveChangesAsync(ct).ConfigureAwait(false);
     }
 
-    public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken ct = default)
+    public async Task<ImmutableArray<User>> GetAllAsync(CancellationToken ct = default)
     {
         var entities = await _context.Users
             .AsNoTracking()
@@ -87,7 +88,7 @@ public sealed class EntityFrameworkUserStorage : IStorage<UserRef, User>
             .ToListAsync(ct)
             .ConfigureAwait(false);
 
-        return entities.Select(MapToModel).ToList();
+        return entities.Select(MapToModel).ToImmutableArray();
     }
 
     public async Task<int> CountAsync(CancellationToken ct = default)

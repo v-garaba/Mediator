@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Mediators.Models;
 using Mediators.Repository.EntityFramework.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -61,7 +62,7 @@ public sealed class EntityFrameworkMessageStorage : IStorage<MessageRef, ChatMes
         await _context.SaveChangesAsync(ct).ConfigureAwait(false);
     }
 
-    public async Task<IReadOnlyList<ChatMessage>> GetAllAsync(CancellationToken ct = default)
+    public async Task<ImmutableArray<ChatMessage>> GetAllAsync(CancellationToken ct = default)
     {
         var entities = await _context.Messages
             .AsNoTracking()
@@ -69,7 +70,7 @@ public sealed class EntityFrameworkMessageStorage : IStorage<MessageRef, ChatMes
             .ToListAsync(ct)
             .ConfigureAwait(false);
 
-        return entities.Select(MapToModel).ToList();
+        return entities.Select(MapToModel).ToImmutableArray();
     }
 
     public async Task<int> CountAsync(CancellationToken ct = default)

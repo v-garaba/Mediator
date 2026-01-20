@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Mediators.Models;
 using Mediators.Repository.EntityFramework.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -58,14 +59,14 @@ public sealed class EntityFrameworkUserNotificationStorage : IStorage<UserRef, U
         await _context.SaveChangesAsync(ct).ConfigureAwait(false);
     }
 
-    public async Task<IReadOnlyList<UserNotification>> GetAllAsync(CancellationToken ct = default)
+    public async Task<ImmutableArray<UserNotification>> GetAllAsync(CancellationToken ct = default)
     {
         var entities = await _context.UserNotifications
             .AsNoTracking()
             .ToListAsync(ct)
             .ConfigureAwait(false);
 
-        return entities.Select(MapToModel).ToList();
+        return entities.Select(MapToModel).ToImmutableArray();
     }
 
     public async Task<int> CountAsync(CancellationToken ct = default)

@@ -5,7 +5,7 @@ public interface IRequestHandler
     Type RequestType { get; }
 }
 
-public interface IRequestHandler<in TRequest, TResponse> : IRequestHandler
+public interface IRequestHandler<TRequest, TResponse> : IRequestHandler
     where TRequest : IRequest<TResponse>
     where TResponse : notnull
 {

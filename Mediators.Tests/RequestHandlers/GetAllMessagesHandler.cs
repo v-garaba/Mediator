@@ -37,9 +37,7 @@ internal sealed class GetAllMessagesHandlerTests
         var message2 = new ChatMessage(_userId, "Second", MessageType.Public);
         var message3 = new ChatMessage(_userId, "Third", MessageType.Public);
 
-        IStorage<MessageRef, ChatMessage> messageStorage = _serviceProvider.GetRequiredService<
-            IStorage<MessageRef, ChatMessage>
-        >();
+        IStorage<MessageRef, ChatMessage> messageStorage = _serviceProvider.GetRequiredService<IStorage<MessageRef, ChatMessage>>();
         await messageStorage.SetAsync(message1);
         await messageStorage.SetAsync(message2);
         await messageStorage.SetAsync(message3);

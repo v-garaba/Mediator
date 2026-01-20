@@ -1,5 +1,4 @@
-﻿using Mediators.Models;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace Mediators.Notifications;
 
